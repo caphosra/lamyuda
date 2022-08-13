@@ -1,4 +1,5 @@
 import ArithTerm
+import Lexer
 
 printTerm :: ArithTerm -> IO ()
 printTerm num =
@@ -11,6 +12,9 @@ printTerm num =
 
 main =
     do
+        print (tokenize "exp = lambda n. lambda m. m n")
+        print (tokenize "succ = lambda n. lambda s. lambda z. n s (s z)")
+
         printTerm (Succ (Pred ATrue))
         printTerm (Succ (Succ Zero))
         printTerm (Pred Zero)
