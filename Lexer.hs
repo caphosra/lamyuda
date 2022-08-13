@@ -4,6 +4,8 @@ module Lexer (
         Ident,
         Sep,
         Equal,
+        LeftParen,
+        RightParen,
         EOF
     ),
     tokenize
