@@ -35,15 +35,15 @@ concatResult f s =
         (_, LexError msg) -> LexError msg
 
 tokenize :: String -> LexerResult
-tokenize "" = Valid [EOF]
 tokenize s =
     case spaceRemoved of
+        "" -> Valid [EOF]
         '.' : rest -> concatResult Sep (tokenize rest)
         '=' : rest -> concatResult Equal (tokenize rest)
         '(' : rest -> concatResult LeftParen (tokenize rest)
         ')' : rest -> concatResult RightParen (tokenize rest)
         _ -> case token of
-            "" -> LexError token
+            "" -> LexError (take 1 spaceRemoved)
             "lambda" -> concatResult Lambda (tokenize next)
             token -> concatResult (Ident token) (tokenize next)
     where
