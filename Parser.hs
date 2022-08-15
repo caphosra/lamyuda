@@ -12,7 +12,6 @@ module Parser (
     parseStatement
 ) where
 
-import ArithTerm
 import Lexer
 import Data.List (elemIndex)
 
