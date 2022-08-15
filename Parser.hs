@@ -4,8 +4,12 @@ module Parser (
         Abst,
         App
     ),
-    findRightParen,
-    parseLambdaCal
+    Statement (
+        FuncDef,
+        Eval
+    ),
+    parseLambdaCal,
+    parseStatement
 ) where
 
 import ArithTerm
@@ -22,8 +26,10 @@ data LambdaCal
 data Statement
     = FuncDef String LambdaCal
     | Eval LambdaCal
+    deriving (Eq, Show)
 
-type ParseResult = Result LambdaCal [Token]
+type ParseCalResult = Result LambdaCal [Token]
+type ParseResult = Result Statement [Token]
 
 addParenNum :: Int -> Token -> Int
 addParenNum n LeftParen = 1 + n
@@ -33,7 +39,7 @@ addParenNum n _ = n
 findRightParen :: [Token] -> Maybe Int
 findRightParen s = elemIndex 0 (scanl addParenNum 1 s)
 
-connectApp :: LambdaCal -> [Token] -> ParseResult
+connectApp :: LambdaCal -> [Token] -> ParseCalResult
 connectApp new [] = Valid new
 connectApp new rest =
     case parseLambdaCal rest of
@@ -41,7 +47,7 @@ connectApp new rest =
         Valid cal -> Valid (App new cal)
         err -> err
 
-parseLambdaCal :: [Token] -> ParseResult
+parseLambdaCal :: [Token] -> ParseCalResult
 parseLambdaCal s =
     case s of
         Lambda : (Ident val) : Sep : rest ->
@@ -66,3 +72,13 @@ parseLambdaCal s =
             where
                 right = findRightParen rest
         _ -> Error s
+
+parseStatement :: [Token] -> ParseResult
+parseStatement ((Ident name) : Equal : rest) =
+    case parseLambdaCal rest of
+        Valid cal -> Valid (FuncDef name cal)
+        Error err -> Error err
+parseStatement tokens =
+    case parseLambdaCal tokens of
+        Valid cal -> Valid (Eval cal)
+        Error err -> Error err
