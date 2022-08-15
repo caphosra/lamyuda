@@ -5,8 +5,11 @@ module Lexer (
         Sep,
         Equal,
         LeftParen,
-        RightParen,
-        EOF
+        RightParen
+    ),
+    Result (
+        Valid,
+        Error
     ),
     tokenize
 ) where
@@ -20,30 +23,31 @@ data Token
     | Equal
     | LeftParen
     | RightParen
-    | EOF
     deriving (Eq, Show)
 
-data LexerResult
-    = Valid [Token]
-    | LexError String
+data Result item err
+    = Valid item
+    | Error err
     deriving (Eq, Show)
 
-concatResult :: Token -> LexerResult -> LexerResult
+type LexResult = Result [Token] String
+
+concatResult :: Token -> LexResult -> LexResult
 concatResult f s =
     case (f, s) of
         (token1, Valid token2) -> Valid (token1 : token2)
-        (_, LexError msg) -> LexError msg
+        (_, Error msg) -> Error msg
 
-tokenize :: String -> LexerResult
+tokenize :: String -> LexResult
 tokenize s =
     case spaceRemoved of
-        "" -> Valid [EOF]
+        "" -> Valid []
         '.' : rest -> concatResult Sep (tokenize rest)
         '=' : rest -> concatResult Equal (tokenize rest)
         '(' : rest -> concatResult LeftParen (tokenize rest)
         ')' : rest -> concatResult RightParen (tokenize rest)
         _ -> case token of
-            "" -> LexError (take 1 spaceRemoved)
+            "" -> Error (take 1 spaceRemoved)
             "lambda" -> concatResult Lambda (tokenize next)
             token -> concatResult (Ident token) (tokenize next)
     where
