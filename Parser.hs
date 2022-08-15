@@ -19,7 +19,13 @@ data LambdaCal
     = Variable String
     | Abst String LambdaCal
     | App LambdaCal LambdaCal
-    | Paren LambdaCal
+    deriving (Eq, Show)
+
+data LambdaCal'
+    = Variable' String
+    | Abst' String LambdaCal'
+    | App' LambdaCal' LambdaCal'
+    | Paren' LambdaCal'
     deriving (Eq, Show)
 
 data Statement
@@ -28,6 +34,7 @@ data Statement
     deriving (Eq, Show)
 
 type ParseCalResult = Result LambdaCal [Token]
+type ParseCalResult' = Result LambdaCal' [Token]
 type ParseResult = Result Statement [Token]
 
 addParenNum :: Int -> Token -> Int
@@ -38,39 +45,51 @@ addParenNum n _ = n
 findRightParen :: [Token] -> Maybe Int
 findRightParen s = elemIndex 0 (scanl addParenNum 1 s)
 
-connectApp :: LambdaCal -> [Token] -> ParseCalResult
+connectApp :: LambdaCal' -> [Token] -> ParseCalResult'
 connectApp new [] = Valid new
 connectApp new rest =
-    case parseLambdaCal rest of
-        Valid (App left right) -> Valid (App (App new left) right)
-        Valid cal -> Valid (App new cal)
+    case parseLambdaCal' rest of
+        Valid (App' left right) -> Valid (App' (App' new left) right)
+        Valid cal -> Valid (App' new cal)
         err -> err
 
 parseLambdaCal :: [Token] -> ParseCalResult
 parseLambdaCal s =
+    case parseLambdaCal' s of
+        Valid cal -> Valid (removeParen cal)
+        Error err -> Error err
+
+parseLambdaCal' :: [Token] -> ParseCalResult'
+parseLambdaCal' s =
     case s of
         Lambda : (Ident val) : Sep : rest ->
             case restTerm of
-                Valid cal -> Valid (Abst val cal)
+                Valid cal -> Valid (Abst' val cal)
                 err -> err
             where
-                restTerm = parseLambdaCal rest
+                restTerm = parseLambdaCal' rest
         (Ident val) : rest ->
-            connectApp (Variable val) rest
+            connectApp (Variable' val) rest
         LeftParen : rest ->
             case right of
                 Just pos ->
                     case inside of
                         Valid item ->
-                            connectApp (Paren item) outside
+                            connectApp (Paren' item) outside
                         err -> err
                     where
-                        inside = parseLambdaCal (take (pos - 1) rest)
+                        inside = parseLambdaCal' (take (pos - 1) rest)
                         outside = drop pos rest
                 Nothing -> Error s
             where
                 right = findRightParen rest
         _ -> Error s
+
+removeParen :: LambdaCal' -> LambdaCal
+removeParen (Variable' name) = Variable name
+removeParen (Abst' name cal) = Abst name (removeParen cal)
+removeParen (App' left right) = App (removeParen left) (removeParen right)
+removeParen (Paren' cal) = removeParen cal
 
 parseStatement :: [Token] -> ParseResult
 parseStatement ((Ident name) : Equal : rest) =
