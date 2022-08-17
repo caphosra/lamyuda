@@ -49,7 +49,7 @@ tokenize s =
         _ -> case token of
             "" -> Error (take 1 spaceRemoved)
             "lambda" -> concatResult Lambda (tokenize next)
-            token -> concatResult (Ident token) (tokenize next)
+            name -> concatResult (Ident name) (tokenize next)
     where
         spaceRemoved = dropWhile isSpace s
         token = takeWhile isAlphaNum spaceRemoved

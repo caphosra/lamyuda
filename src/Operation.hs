@@ -20,15 +20,13 @@ generateNum n =
 
 replaceBuiltin :: LambdaCal -> LambdaCal
 replaceBuiltin (Variable name) =
-    case num of
+    case readMaybe name :: Maybe Int of
         Just num -> generateNum num
         Nothing ->
             case name of
                 "true" -> Abst "t" (Abst "f" (Variable "t"))
                 "false" -> Abst "t" (Abst "f" (Variable "f"))
                 _ -> Variable name
-    where
-        num = readMaybe name :: Maybe Int
 replaceBuiltin (Abst name cal) = Abst name (replaceBuiltin cal)
 replaceBuiltin (App left right) = App (replaceBuiltin left) (replaceBuiltin right)
 
@@ -49,8 +47,8 @@ replaceVariable (App left right) v replaceTo =
 betaNO :: LambdaCal -> LambdaCal
 betaNO cal =
     case cal of
-        Abst name cal -> Abst name (betaNO cal)
-        App (Abst name cal) replaceTo -> replaceVariable cal name replaceTo
+        Abst name child -> Abst name (betaNO child)
+        App (Abst name child) replaceTo -> replaceVariable child name replaceTo
         App left right ->
             if try /= cal then
                 try
@@ -63,7 +61,7 @@ betaNO cal =
 betaCN :: LambdaCal -> LambdaCal
 betaCN cal =
     case cal of
-        App (Abst name cal) replaceTo -> replaceVariable cal name replaceTo
+        App (Abst name child) replaceTo -> replaceVariable child name replaceTo
         App left right ->
             if try /= cal then
                 try
@@ -76,8 +74,8 @@ betaCN cal =
 betaCV :: LambdaCal -> LambdaCal
 betaCV cal =
     case cal of
-        App (Abst name1 cal1) (Abst name2 cal2) ->
-            replaceVariable cal1 name1 (Abst name2 cal2)
+        App (Abst name1 child1) (Abst name2 child2) ->
+            replaceVariable child1 name1 (Abst name2 child2)
         App left right ->
             if try /= cal then
                 try
