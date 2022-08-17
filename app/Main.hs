@@ -4,6 +4,7 @@ import Lexer
 import Parser
 import Operation
 
+main :: IO ()
 main =
     do
         case tokenize "(lambda n. lambda m. lambda s. lambda z. n s (m s z)) 5 6" of
