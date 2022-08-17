@@ -1,21 +1,26 @@
+module Main (main) where
+
 import Lexer
 import Parser
 import Operation
 
 main =
     do
-        case tokenize "(lambda n. lambda m. lambda s. lambda z. n s (m s z)) (lambda s. lambda z. s z) (lambda s. lambda z. s z)" of
+        case tokenize "(lambda n. lambda m. lambda s. lambda z. n s (m s z)) 5 6" of
             Valid tokens ->
                 do
                     case parseLambdaCal tokens of
                         Valid cal ->
                             do
                                 putStrLn "---- the normal order strategy ----"
-                                printProcesses betaNO cal []
+                                putStrLn (showLambdaCal cal)
+                                printProcesses betaNO (replaceBuiltin cal) []
                                 putStrLn "---- the call by name strategy ----"
-                                printProcesses betaCN cal []
+                                putStrLn (showLambdaCal cal)
+                                printProcesses betaCN (replaceBuiltin cal) []
                                 putStrLn "---- the call by value strategy ----"
-                                printProcesses betaCV cal []
+                                putStrLn (showLambdaCal cal)
+                                printProcesses betaCV (replaceBuiltin cal) []
                         Error err -> print err
             Error err -> print err
 
