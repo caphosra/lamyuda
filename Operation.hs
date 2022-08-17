@@ -1,16 +1,36 @@
 module Operation (
     showLambdaCal,
+    replaceBuiltin,
     betaNO,
     betaCN,
     betaCV,
 ) where
 
+import Text.Read
 import Parser
 
 showLambdaCal :: LambdaCal -> String
 showLambdaCal (Variable name) = name
 showLambdaCal (Abst name cal) = "(λ " ++ name ++ ". " ++ showLambdaCal cal ++ ")"
 showLambdaCal (App left right) = "(" ++ showLambdaCal left ++ " " ++ showLambdaCal right ++ ")"
+
+generateNum :: Int -> LambdaCal
+generateNum n =
+    Abst "s" (Abst "z" (iterate (App (Variable "s")) (Variable "z") !! n))
+
+replaceBuiltin :: LambdaCal -> LambdaCal
+replaceBuiltin (Variable name) =
+    case num of
+        Just num -> generateNum num
+        Nothing ->
+            case name of
+                "true" -> Abst "t" (Abst "f" (Variable "t"))
+                "false" -> Abst "t" (Abst "f" (Variable "f"))
+                _ -> Variable name
+    where
+        num = readMaybe name :: Maybe Int
+replaceBuiltin (Abst name cal) = Abst name (replaceBuiltin cal)
+replaceBuiltin (App left right) = App (replaceBuiltin left) (replaceBuiltin right)
 
 replaceVariable :: LambdaCal -> String -> LambdaCal -> LambdaCal
 replaceVariable (Variable name) v replaceTo =
