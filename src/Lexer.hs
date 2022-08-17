@@ -7,38 +7,35 @@ module Lexer (
         LeftParen,
         RightParen
     ),
-    Result (
-        Valid,
-        Error
-    ),
     tokenize
 ) where
 
 import Data.Char (isAlphaNum, isSpace)
 
+import Result
+
+-- A token that is used to represent the calculi.
 data Token
-    = Lambda
-    | Ident String
-    | Sep
-    | Equal
-    | LeftParen
-    | RightParen
+    = Lambda        -- "lambda" (an alternative form of "λ")
+    | Ident String  -- an arbitrary identifier, such as "x"
+    | Sep           -- "."
+    | Equal         -- "="
+    | LeftParen     -- "("
+    | RightParen    -- ")"
     deriving (Eq, Show)
 
-data Result item err
-    = Valid item
-    | Error err
-    deriving (Eq, Show)
+-- Holds a result of lexing.
+type LexerResult = Result [Token] String
 
-type LexResult = Result [Token] String
-
-concatResult :: Token -> LexResult -> LexResult
+-- Concatenates a token with the result of lexing on a part of the string.
+concatResult :: Token -> LexerResult -> LexerResult
 concatResult f s =
     case (f, s) of
         (token1, Valid token2) -> Valid (token1 : token2)
         (_, Error msg) -> Error msg
 
-tokenize :: String -> LexResult
+-- Tokenizes characters.
+tokenize :: String -> LexerResult
 tokenize s =
     case spaceRemoved of
         "" -> Valid []

@@ -24,9 +24,11 @@ source-repository head
 
 library
   exposed-modules:
+      LambdaCalculus
       Lexer
       Operation
       Parser
+      Result
   other-modules:
       Paths_lamdba
   hs-source-dirs:

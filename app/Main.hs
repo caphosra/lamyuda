@@ -1,8 +1,10 @@
 module Main (main) where
 
+import LambdaCalculus
 import Lexer
-import Parser
 import Operation
+import Parser
+import Result
 
 main :: IO ()
 main =
