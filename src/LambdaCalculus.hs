@@ -14,8 +14,14 @@ data LambdaCal
     | App LambdaCal LambdaCal   -- M M
     deriving (Eq, Show)
 
--- Converts a lambda calculus into a human-friendly form.
+-- Wraps a calculus with parentheses if it is not a variable.
+showCalWithParen :: LambdaCal -> String
+showCalWithParen (Variable name) = name
+showCalWithParen cal = "("++ showLambdaCal cal ++ ")"
+
+-- Formats a lambda calculus into human-friendly.
 showLambdaCal :: LambdaCal -> String
 showLambdaCal (Variable name) = name
-showLambdaCal (Abst name cal) = "(λ " ++ name ++ ". " ++ showLambdaCal cal ++ ")"
-showLambdaCal (App left right) = "(" ++ showLambdaCal left ++ " " ++ showLambdaCal right ++ ")"
+showLambdaCal (Abst name cal) = "λ" ++ name ++ ". " ++ showLambdaCal cal
+showLambdaCal (App (App cal1 cal2) cal3) = showLambdaCal (App cal1 cal2) ++ " " ++ showCalWithParen cal3
+showLambdaCal (App cal1 cal2) = showCalWithParen cal1 ++ " " ++ showCalWithParen cal2
