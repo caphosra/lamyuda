@@ -25,6 +25,6 @@ replaceNum (App left right) = App (replaceNum left) (replaceNum right)
 replaceBuiltin :: LambdaCal -> LambdaCal
 replaceBuiltin =
     replaceNum
-    . (\c -> replaceVariable c "true" (Abst "t" (Abst "f" (Variable "t"))))
-    . (\c -> replaceVariable c "false" (Abst "t" (Abst "f" (Variable "f"))))
-    . (\c -> replaceVariable c "test" (Abst "b" (Abst "c" (Abst "d" (App (App (Variable "b") (Variable "c")) (Variable "d"))))))
+    . replaceVariable "true" (Abst "t" (Abst "f" (Variable "t")))
+    . replaceVariable "false" (Abst "t" (Abst "f" (Variable "f")))
+    . replaceVariable "test" (Abst "b" (Abst "c" (Abst "d" (App (App (Variable "b") (Variable "c")) (Variable "d")))))
