@@ -1,31 +1,11 @@
 module Operation (
-    replaceBuiltin,
+    replaceVariable,
     betaNO,
     betaCN,
     betaCV,
 ) where
 
-import Text.Read
-
 import LambdaCalculus
-
--- Generates a number in Church encoding.
-generateNum :: Int -> LambdaCal
-generateNum n =
-    Abst "s" (Abst "z" (iterate (App (Variable "s")) (Variable "z") !! n))
-
--- Replaces the variables with the builtin functions.
-replaceBuiltin :: LambdaCal -> LambdaCal
-replaceBuiltin (Variable name) =
-    case readMaybe name :: Maybe Int of
-        Just num -> generateNum num
-        Nothing ->
-            case name of
-                "true" -> Abst "t" (Abst "f" (Variable "t"))
-                "false" -> Abst "t" (Abst "f" (Variable "f"))
-                _ -> Variable name
-replaceBuiltin (Abst name cal) = Abst name (replaceBuiltin cal)
-replaceBuiltin (App left right) = App (replaceBuiltin left) (replaceBuiltin right)
 
 -- Replaces the variable with the function given.
 replaceVariable :: LambdaCal -> String -> LambdaCal -> LambdaCal

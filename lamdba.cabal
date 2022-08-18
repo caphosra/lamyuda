@@ -28,6 +28,7 @@ library
       Lexer
       Operation
       Parser
+      Preprocess
       Result
   other-modules:
       Paths_lamdba
