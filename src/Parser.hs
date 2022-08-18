@@ -46,14 +46,10 @@ addParenNum n _ = n
 findRightParen :: [Token] -> Maybe Int
 findRightParen s = elemIndex 0 (scanl addParenNum 1 s)
 
--- Parses a chain of an application, that is "M M M...".
-connectApp :: LambdaCal' -> [Token] -> CalParserResult'
-connectApp new [] = Valid new
-connectApp new rest =
-    case parseLambdaCal' rest of
-        Valid (App' left right) -> Valid (App' (App' new left) right)
-        Valid cal -> Valid (App' new cal)
-        err -> err
+-- Extends a chain of an application, that is "M M M...".
+appendApps :: LambdaCal' -> LambdaCal' -> LambdaCal'
+appendApps new (App' left right) = App' (appendApps new left) right
+appendApps new cal = App' new cal
 
 -- Removes parentheses from a lambda calculus.
 removeParen :: LambdaCal' -> LambdaCal
@@ -61,6 +57,14 @@ removeParen (Variable' name) = Variable name
 removeParen (Abst' name cal) = Abst name (removeParen cal)
 removeParen (App' left right) = App (removeParen left) (removeParen right)
 removeParen (Paren' cal) = removeParen cal
+
+-- Parses an application.
+parseApp :: LambdaCal' -> [Token] -> CalParserResult'
+parseApp new [] = Valid new
+parseApp new rest =
+    case parseLambdaCal' rest of
+        Valid cal -> Valid (appendApps new cal)
+        err -> err
 
 -- Parses a lambda calculus.
 parseLambdaCal :: [Token] -> CalParserResult
@@ -77,13 +81,13 @@ parseLambdaCal' (Lambda : (Ident val) : Sep : rest) =
         err -> err
     where
         restTerm = parseLambdaCal' rest
-parseLambdaCal' ((Ident val) : rest) = connectApp (Variable' val) rest
+parseLambdaCal' ((Ident val) : rest) = parseApp (Variable' val) rest
 parseLambdaCal' (LeftParen : rest) =
     case right of
         Just pos ->
             case inside of
                 Valid item ->
-                    connectApp (Paren' item) outside
+                    parseApp (Paren' item) outside
                 err -> err
             where
                 inside = parseLambdaCal' (take (pos - 1) rest)
