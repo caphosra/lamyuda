@@ -1,39 +1,39 @@
 module Main (main) where
 
+import System.IO
+
+import Evaluator
 import LambdaCalculus
 import Lexer
-import Operation
 import Parser
 import Result
 
 main :: IO ()
 main =
     do
-        case tokenize "(lambda n. lambda m. lambda s. lambda z. n s (m s z)) 5 6" of
-            Valid tokens ->
-                do
-                    case parseLambdaCal tokens of
-                        Valid cal ->
-                            do
-                                putStrLn "---- the normal order strategy ----"
-                                putStrLn (showLambdaCal cal)
-                                printProcesses betaNO (replaceBuiltin cal) []
-                                putStrLn "---- the call by name strategy ----"
-                                putStrLn (showLambdaCal cal)
-                                printProcesses betaCN (replaceBuiltin cal) []
-                                putStrLn "---- the call by value strategy ----"
-                                putStrLn (showLambdaCal cal)
-                                printProcesses betaCV (replaceBuiltin cal) []
-                        Error err -> print err
-            Error err -> print err
+        putStrLn "Lamdba -- a simple lambda calculus operator"
+        _ <- prompt []
+        pure ()
 
-printProcesses :: (LambdaCal -> LambdaCal) -> LambdaCal -> [LambdaCal] -> IO ()
-printProcesses beta cal appeared =
-    do
-        putStrLn (showLambdaCal cal)
-        if cal `elem` appeared then
-            pure ()
-        else
-            do
-                putStr "→ "
-                printProcesses beta (beta cal) (cal : appeared)
+prompt :: [(String, LambdaCal)] -> IO [(String, LambdaCal)]
+prompt predefined = do
+    putStr "> "
+    hFlush stdout
+    input <- getLine
+    if input /= "exit" then
+        case tokenize input of
+            Valid tokens ->
+                case parseStatement tokens of
+                    Valid st -> do
+                        newPredefined <- evaluateStatement st predefined
+                        prompt newPredefined
+                    Error err -> do
+                        putStrLn ("Syntax error \"" ++ show err ++ "\"")
+                        prompt predefined
+            Error err -> do
+                putStrLn ("Invalid character found \"" ++ err ++ "\"")
+                prompt predefined
+    else
+        do
+            putStrLn "Quit"
+            pure predefined

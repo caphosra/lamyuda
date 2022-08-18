@@ -42,6 +42,7 @@ library
 executable lamdba-exe
   main-is: Main.hs
   other-modules:
+      Evaluator
       Paths_lamdba
   hs-source-dirs:
       app
