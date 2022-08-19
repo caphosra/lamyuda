@@ -40,3 +40,5 @@ evaluateStatement (Eval cal) predefined = do
     replaced <- replaceFunction 0 cal predefined
     betaReduction (beta NormalOrder) replaced [replaced]
     pure predefined
+evaluateStatement (Exec _) predefined = do
+    pure predefined

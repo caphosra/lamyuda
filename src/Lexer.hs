@@ -5,8 +5,11 @@ module Lexer (
         Sep,
         Equal,
         LeftParen,
-        RightParen
+        RightParen,
+        Command
     ),
+    toStr,
+    lengthOfToken,
     tokenize
 ) where
 
@@ -28,15 +31,19 @@ data Token
 -- Holds a result of lexing.
 type LexerResult = Result [(Int, Token)] (Int, String)
 
+-- Converts a token to a string.
+toStr :: Token -> String
+toStr Lambda = "lambda"
+toStr (Ident name) = name
+toStr Sep = "."
+toStr Equal = "="
+toStr LeftParen = "("
+toStr RightParen = ")"
+toStr Command = "#"
+
 -- Returns the length of the token.
 lengthOfToken :: Token -> Int
-lengthOfToken Lambda = 6
-lengthOfToken (Ident name) = length name
-lengthOfToken Sep = 1
-lengthOfToken Equal = 1
-lengthOfToken LeftParen = 1
-lengthOfToken RightParen = 1
-lengthOfToken Command = 1
+lengthOfToken = length . toStr
 
 -- Prepends a token to the result of lexing.
 prependTokens :: Int -> Token -> String -> LexerResult

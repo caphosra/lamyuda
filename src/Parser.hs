@@ -1,7 +1,8 @@
 module Parser (
     Statement (
         FuncDef,
-        Eval
+        Eval,
+        Exec
     ),
     parseLambdaCal,
     parseStatement
@@ -25,6 +26,7 @@ data LambdaCal'
 data Statement
     = FuncDef String LambdaCal
     | Eval LambdaCal
+    | Exec [String]
     deriving (Eq, Show)
 
 -- Holds a result of parsing a lambda calculus.
@@ -100,6 +102,7 @@ parseStatement ((_, Ident name) : (_, Equal) : rest) =
     case parseLambdaCal rest of
         Valid cal -> Valid (FuncDef name cal)
         Error err -> Error err
+parseStatement ((_, Command) : rest) = Valid (Exec (map (toStr . snd) rest))
 parseStatement tokens =
     case parseLambdaCal tokens of
         Valid cal -> Valid (Eval cal)
