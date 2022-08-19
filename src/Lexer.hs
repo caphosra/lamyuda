@@ -10,7 +10,7 @@ module Lexer (
     tokenize
 ) where
 
-import Data.Char (isAlphaNum, isSpace)
+import Data.Char (isAlphaNum)
 
 import Result
 
@@ -22,32 +22,25 @@ data Token
     | Equal         -- "="
     | LeftParen     -- "("
     | RightParen    -- ")"
+    | Command       -- "#"
     deriving (Eq, Show)
 
 -- Holds a result of lexing.
 type LexerResult = Result [Token] String
 
--- Concatenates a token with the result of lexing on a part of the string.
-concatResult :: Token -> LexerResult -> LexerResult
-concatResult f s =
-    case (f, s) of
-        (token1, Valid token2) -> Valid (token1 : token2)
-        (_, Error msg) -> Error msg
-
 -- Tokenizes characters.
 tokenize :: String -> LexerResult
-tokenize s =
-    case spaceRemoved of
-        "" -> Valid []
-        '.' : rest -> concatResult Sep (tokenize rest)
-        '=' : rest -> concatResult Equal (tokenize rest)
-        '(' : rest -> concatResult LeftParen (tokenize rest)
-        ')' : rest -> concatResult RightParen (tokenize rest)
-        _ -> case token of
-            "" -> Error (take 1 spaceRemoved)
-            "lambda" -> concatResult Lambda (tokenize next)
-            name -> concatResult (Ident name) (tokenize next)
+tokenize "" = Valid []
+tokenize (' ' : rest) = tokenize rest
+tokenize ('.' : rest) = mapResult (tokenize rest) (Sep :)
+tokenize ('=' : rest) = mapResult (tokenize rest) (Equal :)
+tokenize ('(' : rest) = mapResult (tokenize rest) (LeftParen :)
+tokenize (')' : rest) = mapResult (tokenize rest) (RightParen :)
+tokenize ('#' : rest) = mapResult (tokenize rest) (Command :)
+tokenize s
+    | token == "" = Error (take 1 token)
+    | token == "lambda" = mapResult (tokenize next) (Lambda :)
+    | otherwise = mapResult (tokenize next) (Ident token :)
     where
-        spaceRemoved = dropWhile isSpace s
-        token = takeWhile isAlphaNum spaceRemoved
-        next = dropWhile isAlphaNum spaceRemoved
+        token = takeWhile isAlphaNum s
+        next = dropWhile isAlphaNum s
