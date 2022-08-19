@@ -26,21 +26,42 @@ data Token
     deriving (Eq, Show)
 
 -- Holds a result of lexing.
-type LexerResult = Result [Token] String
+type LexerResult = Result [(Int, Token)] (Int, String)
+
+-- Returns the length of the token.
+lengthOfToken :: Token -> Int
+lengthOfToken Lambda = 6
+lengthOfToken (Ident name) = length name
+lengthOfToken Sep = 1
+lengthOfToken Equal = 1
+lengthOfToken LeftParen = 1
+lengthOfToken RightParen = 1
+lengthOfToken Command = 1
+
+-- Prepends a token to the result of lexing.
+prependTokens :: Int -> Token -> String -> LexerResult
+prependTokens pos token rest =
+    mapResult (tokenize' nextPos rest) ((pos, token) :)
+    where
+        nextPos = pos + lengthOfToken token
 
 -- Tokenizes characters.
 tokenize :: String -> LexerResult
-tokenize "" = Valid []
-tokenize (' ' : rest) = tokenize rest
-tokenize ('.' : rest) = mapResult (tokenize rest) (Sep :)
-tokenize ('=' : rest) = mapResult (tokenize rest) (Equal :)
-tokenize ('(' : rest) = mapResult (tokenize rest) (LeftParen :)
-tokenize (')' : rest) = mapResult (tokenize rest) (RightParen :)
-tokenize ('#' : rest) = mapResult (tokenize rest) (Command :)
-tokenize s
-    | token == "" = Error (take 1 token)
-    | token == "lambda" = mapResult (tokenize next) (Lambda :)
-    | otherwise = mapResult (tokenize next) (Ident token :)
+tokenize = tokenize' 0
+
+-- Tokenizes characters. It also tracks the position.
+tokenize' :: Int -> String -> LexerResult
+tokenize' _ "" = Valid []
+tokenize' pos (' ' : rest) = tokenize' (pos + 1) rest
+tokenize' pos ('.' : rest) = prependTokens pos Sep rest
+tokenize' pos ('=' : rest) = prependTokens pos Equal rest
+tokenize' pos ('(' : rest) = prependTokens pos LeftParen rest
+tokenize' pos (')' : rest) = prependTokens pos RightParen rest
+tokenize' pos ('#' : rest) = prependTokens pos Command rest
+tokenize' pos s
+    | token == "" = Error (pos, take 1 s)
+    | token == "lambda" = prependTokens pos Lambda next
+    | otherwise = prependTokens pos (Ident token) next
     where
         token = takeWhile isAlphaNum s
         next = dropWhile isAlphaNum s

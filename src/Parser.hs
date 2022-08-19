@@ -28,22 +28,22 @@ data Statement
     deriving (Eq, Show)
 
 -- Holds a result of parsing a lambda calculus.
-type CalParserResult = Result LambdaCal [Token]
+type CalParserResult = Result LambdaCal (Int, Token)
 
 -- Holds a result of parsing a lambda calculus with parentheses.
-type CalParserResult' = Result LambdaCal' [Token]
+type CalParserResult' = Result LambdaCal' (Int, Token)
 
 -- Holds a result of parsing.
-type ParserResult = Result Statement [Token]
+type ParserResult = Result Statement (Int, Token)
 
 -- Adds +1 if the token is "(" and -1 if ")".
-addParenNum :: Int -> Token -> Int
-addParenNum n LeftParen = 1 + n
-addParenNum n RightParen = -1 + n
+addParenNum :: Int -> (Int, Token) -> Int
+addParenNum n (_, LeftParen) = 1 + n
+addParenNum n (_, RightParen) = -1 + n
 addParenNum n _ = n
 
 -- Looks for the corresponding right parenthesis.
-findRightParen :: [Token] -> Maybe Int
+findRightParen :: [(Int, Token)] -> Maybe Int
 findRightParen s = elemIndex 0 (scanl addParenNum 1 s)
 
 -- Extends a chain of an application, that is "M M M...".
@@ -59,7 +59,7 @@ removeParen (App' left right) = App (removeParen left) (removeParen right)
 removeParen (Paren' cal) = removeParen cal
 
 -- Parses an application.
-parseApp :: LambdaCal' -> [Token] -> CalParserResult'
+parseApp :: LambdaCal' -> [(Int, Token)] -> CalParserResult'
 parseApp new [] = Valid new
 parseApp new rest =
     case parseLambdaCal' rest of
@@ -67,22 +67,18 @@ parseApp new rest =
         err -> err
 
 -- Parses a lambda calculus.
-parseLambdaCal :: [Token] -> CalParserResult
+parseLambdaCal :: [(Int, Token)] -> CalParserResult
 parseLambdaCal s =
     case parseLambdaCal' s of
         Valid cal -> Valid (removeParen cal)
         Error err -> Error err
 
 -- Parses a lambda calculus with parentheses.
-parseLambdaCal' :: [Token] -> CalParserResult'
-parseLambdaCal' (Lambda : (Ident val) : Sep : rest) =
-    case restTerm of
-        Valid cal -> Valid (Abst' val cal)
-        err -> err
-    where
-        restTerm = parseLambdaCal' rest
-parseLambdaCal' ((Ident val) : rest) = parseApp (Variable' val) rest
-parseLambdaCal' (LeftParen : rest) =
+parseLambdaCal' :: [(Int, Token)] -> CalParserResult'
+parseLambdaCal' ((_, Lambda) : (_, Ident val) : (_, Sep) : rest) =
+    mapResult (parseLambdaCal' rest) (Abst' val)
+parseLambdaCal' ((_, Ident val) : rest) = parseApp (Variable' val) rest
+parseLambdaCal' ((leftPos, LeftParen) : rest) =
     case right of
         Just pos ->
             case inside of
@@ -92,14 +88,15 @@ parseLambdaCal' (LeftParen : rest) =
             where
                 inside = parseLambdaCal' (take (pos - 1) rest)
                 outside = drop pos rest
-        Nothing -> Error (LeftParen : rest)
+        Nothing -> Error (leftPos, LeftParen)
     where
         right = findRightParen rest
-parseLambdaCal' s = Error s
+parseLambdaCal' [] = Error (0, Ident "")
+parseLambdaCal' s = Error (head s)
 
 -- Parses a statement.
-parseStatement :: [Token] -> ParserResult
-parseStatement ((Ident name) : Equal : rest) =
+parseStatement :: [(Int, Token)] -> ParserResult
+parseStatement ((_, Ident name) : (_, Equal) : rest) =
     case parseLambdaCal rest of
         Valid cal -> Valid (FuncDef name cal)
         Error err -> Error err

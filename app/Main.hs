@@ -31,7 +31,7 @@ prompt predefined = do
                         putStrLn ("Syntax error \"" ++ show err ++ "\"")
                         prompt predefined
             Error err -> do
-                putStrLn ("Invalid character found \"" ++ err ++ "\"")
+                putStrLn ("Invalid character found \"" ++ show err ++ "\"")
                 prompt predefined
     else
         do
