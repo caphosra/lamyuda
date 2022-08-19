@@ -2,6 +2,7 @@ module Evaluator (
     evaluateStatement
 ) where
 
+import BetaReduction
 import LambdaCalculus
 import Operation
 import Parser
@@ -17,23 +18,25 @@ replaceFunction depth cal predefined
         replaceFunction (depth + 1) replaced predefined
     | otherwise = pure cal
     where
-        replaced = (foldl (flip (uncurry replaceVariable)) . replaceBuiltin) cal predefined
+        replaced = (replaceBuiltin . replaceAll predefined) cal
 
-betaReduction :: (LambdaCal -> LambdaCal) -> LambdaCal -> [LambdaCal] -> IO ()
-betaReduction beta cal appeared = do
-    if cal `elem` appeared then
-        pure ()
-    else
-        do
-            putStrLn ("→ " ++ showLambdaCal (beta cal))
-            betaReduction beta (beta cal) (cal : appeared)
+betaReduction :: (LambdaCal -> ReductionResult) -> LambdaCal -> [LambdaCal] -> IO ()
+betaReduction betaRed cal appeared = do
+    case betaRed cal of
+        Reduced red -> do
+            putStrLn ("→ " ++ showLambdaCal red)
+            if red `elem` appeared then
+                putStrLn "Diverging."
+            else
+                betaReduction betaRed red (red : appeared)
+        NormalForm _ -> putStrLn "Normal form."
 
 evaluateStatement :: Statement -> [(String, LambdaCal)] -> IO [(String, LambdaCal)]
 evaluateStatement (FuncDef name cal) predefined = do
-    putStrLn ("Defined " ++ name ++ " = " ++ showLambdaCal cal)
+    putStrLn ("Defined: " ++ name ++ " = " ++ showLambdaCal cal)
     pure ((name, cal) : predefined)
 evaluateStatement (Eval cal) predefined = do
     putStrLn (showLambdaCal cal)
     replaced <- replaceFunction 0 cal predefined
-    betaReduction betaNO replaced []
+    betaReduction (beta NormalOrder) replaced [replaced]
     pure predefined
