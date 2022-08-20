@@ -1,11 +1,11 @@
 module Evaluator (
-    evaluateStatement
+    replaceFunction,
+    betaReduction
 ) where
 
 import BetaReduction
 import LambdaCalculus
 import Operation
-import Parser
 import Preprocess
 
 replaceFunction :: Int -> LambdaCal -> [(String, LambdaCal)] -> IO LambdaCal
@@ -30,15 +30,3 @@ betaReduction betaRed cal appeared = do
             else
                 betaReduction betaRed red (red : appeared)
         NormalForm _ -> putStrLn "Normal form."
-
-evaluateStatement :: Statement -> [(String, LambdaCal)] -> IO [(String, LambdaCal)]
-evaluateStatement (FuncDef name cal) predefined = do
-    putStrLn ("Defined: " ++ name ++ " = " ++ showLambdaCal cal)
-    pure ((name, cal) : predefined)
-evaluateStatement (Eval cal) predefined = do
-    putStrLn (showLambdaCal cal)
-    replaced <- replaceFunction 0 cal predefined
-    betaReduction (beta NormalOrder) replaced [replaced]
-    pure predefined
-evaluateStatement (Exec _) predefined = do
-    pure predefined
