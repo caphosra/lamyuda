@@ -12,6 +12,8 @@ import Result
 main :: IO ()
 main =
     do
+        hSetEncoding stdin utf8
+        hSetEncoding stdout utf8
         putStrLn "Lamdba -- a simple lambda calculus operator"
         prompt (NormalOrder, [])
 
