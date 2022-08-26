@@ -1,6 +1,8 @@
 module Main (main) where
 
 import System.IO
+import Control.Monad.IO.Class
+import System.Console.Haskeline
 
 import BetaReduction
 import Evaluator
@@ -15,71 +17,72 @@ main =
         hSetEncoding stdin utf8
         hSetEncoding stdout utf8
         putStrLn "Lamdba -- a simple lambda calculus operator"
-        prompt (NormalOrder, [])
+        runInputT defaultSettings (promptLoop (NormalOrder, []))
 
 type Config = (ReductionStrategy, [(String, LambdaCal)])
 
-prompt :: Config -> IO ()
-prompt predefined = do
-    putStr "> "
-    hFlush stdout
-    input <- getLine
-    tokenizerProc input
-        $ parserProc
-        $ evalProc predefined prompt
+promptLoop :: Config -> InputT IO ()
+promptLoop config = do
+    rawInput <- getInputLine "> "
+    case rawInput of
+        Just input ->
+            tokenizerProc input
+                $ parserProc
+                $ evalProc config promptLoop
+        Nothing -> return ()
 
-tokenizerProc :: String -> ([(Int, Token)] -> IO ()) -> IO ()
+tokenizerProc :: String -> ([(Int, Token)] -> InputT IO ()) -> InputT IO ()
 tokenizerProc input postProc = do
     case tokenize input of
         Valid tokens -> postProc tokens
         Error (pos, c) ->
-            putStrLn ("Lexer error: An invalid character \"" ++ c ++ "\" was found at " ++ show pos)
+            liftIO $ putStrLn ("Lexer error: An invalid character \"" ++ c ++ "\" was found at " ++ show pos)
 
-parserProc :: (Statement -> IO ()) -> [(Int, Token)] -> IO ()
+parserProc :: (Statement -> InputT IO ()) -> [(Int, Token)] -> InputT IO ()
 parserProc postProc tokens = do
     case parseStatement tokens of
         Valid st -> postProc st
         Error (pos, c) ->
-            putStrLn ("Syntax error: An unexpected token \"" ++ toStr c ++ "\" was found at " ++ show pos)
+            liftIO $ putStrLn ("Syntax error: An unexpected token \"" ++ toStr c ++ "\" was found at " ++ show pos)
 
-evalProc :: Config -> (Config -> IO ()) -> Statement -> IO ()
+evalProc :: Config -> (Config -> InputT IO ()) -> Statement -> InputT IO ()
 evalProc (strategy, functions) exec (FuncDef name term)
     | any (\f -> fst f == name) functions = do
-        putStrLn ("\"" ++ name ++ "\" was already defined.")
-        putStrLn ("Previous : " ++ name ++ " = " ++ showLambdaCal prevTerm)
-        putStrLn ("Redefined: " ++ name ++ " = " ++ showLambdaCal term)
+        liftIO $ putStrLn ("\"" ++ name ++ "\" was already defined.")
+        liftIO $ putStrLn ("Previous : " ++ name ++ " = " ++ showLambdaCal prevTerm)
+        liftIO $ putStrLn ("Redefined: " ++ name ++ " = " ++ showLambdaCal term)
         exec (strategy, replaced)
     | otherwise = do
-        putStrLn ("Defined: " ++ name ++ " = " ++ showLambdaCal term)
+        liftIO $ putStrLn ("Defined: " ++ name ++ " = " ++ showLambdaCal term)
         exec (strategy, (name, term) : functions)
     where
         prevTerm = snd (head (filter (\f -> fst f == name) functions))
         replaced = map (\f -> if fst f == name then (name, term) else f) functions
 evalProc (strategy, functions) exec (Eval cal) = do
-    putStrLn (showLambdaCal cal)
-    replaced <- replaceFunction 0 cal functions
-    betaReduction (beta strategy) replaced [replaced]
+    liftIO $ putStrLn (showLambdaCal cal)
+    replaced <- liftIO $ replaceFunction 0 cal functions
+    liftIO $ betaReduction (beta strategy) replaced [replaced]
     exec (strategy, functions)
 evalProc (strategy, functions) exec (Exec ["list"]) = do
     printFunctions functions
     exec (strategy, functions)
 evalProc (_, functions) exec (Exec ["strategy", "no"]) = do
-    putStrLn "Strategy : Normal Order"
+    liftIO $ putStrLn "Strategy : Normal Order"
     exec (NormalOrder, functions)
 evalProc (_, functions) exec (Exec ["strategy", "cn"]) = do
-    putStrLn "Strategy : Call by Name"
+    liftIO $ putStrLn "Strategy : Call by Name"
     exec (CallByName, functions)
 evalProc (_, functions) exec (Exec ["strategy", "cv"]) = do
-    putStrLn "Strategy : Call by Value"
+    liftIO $ putStrLn "Strategy : Call by Value"
     exec (CallByValue, functions)
 evalProc _ _ (Exec ["exit"]) = do
-    putStrLn "Quit."
+    liftIO $ putStrLn "Quit."
 evalProc config exec _ = do
-    putStrLn "Invalid command."
+    liftIO $ putStrLn "Invalid command."
     exec config
 
-printFunctions :: [(String, LambdaCal)] -> IO ()
+printFunctions :: [(String, LambdaCal)] -> InputT IO ()
 printFunctions [] = pure ()
 printFunctions ((name, func) : rest) = do
-    putStrLn (name ++ " = " ++ showLambdaCal func)
+    liftIO $ putStrLn (name ++ " = " ++ showLambdaCal func)
     printFunctions rest
