@@ -12,12 +12,11 @@ import Parser
 import Result
 
 main :: IO ()
-main =
-    do
-        hSetEncoding stdin utf8
-        hSetEncoding stdout utf8
-        putStrLn "Lamdba -- a simple lambda calculus operator"
-        runInputT defaultSettings (promptLoop (NormalOrder, []))
+main = do
+    hSetEncoding stdin utf8
+    hSetEncoding stdout utf8
+    putStrLn "Lamdba -- a simple lambda calculus operator"
+    runInputT defaultSettings (promptLoop (NormalOrder, []))
 
 type Config = (ReductionStrategy, [(String, LambdaCal)])
 
@@ -28,7 +27,7 @@ promptLoop config = do
         Just input ->
             tokenizerProc input
                 $ parserProc
-                $ evalProc config promptLoop
+                $ evalProc promptLoop config
         Nothing -> return ()
 
 outputStrLn :: String -> InputT IO ()
@@ -48,44 +47,44 @@ parserProc postProc tokens = do
         Error (pos, c) ->
             outputStrLn ("Syntax error: An unexpected token \"" ++ toStr c ++ "\" was found at " ++ show pos)
 
-evalProc :: Config -> (Config -> InputT IO ()) -> Statement -> InputT IO ()
-evalProc (strategy, functions) exec (FuncDef name term)
-    | any (\f -> fst f == name) functions = do
+evalProc :: (Config -> InputT IO ()) -> Config -> Statement -> InputT IO ()
+evalProc exec (strategy, functions) (FuncDef name term)
+    | any ((name ==) . fst) functions = do
         outputStrLn ("\"" ++ name ++ "\" was already defined.")
         outputStrLn ("Previous : " ++ name ++ " = " ++ showLambdaCal prevTerm)
         outputStrLn ("Redefined: " ++ name ++ " = " ++ showLambdaCal term)
-        exec (strategy, replaced)
+        exec (strategy, updated)
     | otherwise = do
         outputStrLn ("Defined: " ++ name ++ " = " ++ showLambdaCal term)
-        exec (strategy, (name, term) : functions)
+        exec (strategy, updated)
     where
-        prevTerm = snd (head (filter (\f -> fst f == name) functions))
-        replaced = map (\f -> if fst f == name then (name, term) else f) functions
-evalProc (strategy, functions) exec (Eval cal) = do
+        prevTerm = snd $ head $ filter ((name ==) . fst) functions
+        updated = (name, term) : filter ((name /=) . fst) functions
+evalProc exec (strategy, functions) (Eval cal) = do
     outputStrLn (showLambdaCal cal)
     replaced <- liftIO $ replaceFunction 0 cal functions
     liftIO $ betaReduction (beta strategy) replaced [replaced]
     exec (strategy, functions)
-evalProc (strategy, functions) exec (Exec ["list"]) = do
-    printFunctions functions
+evalProc exec (strategy, functions) (Exec ["list"]) = do
+    printFunctionsList functions
     exec (strategy, functions)
-evalProc (_, functions) exec (Exec ["strategy", "no"]) = do
+    where
+        printFunctionsList :: [(String, LambdaCal)] -> InputT IO ()
+        printFunctionsList [] = return ()
+        printFunctionsList ((name, func) : rest) = do
+            outputStrLn (name ++ " = " ++ showLambdaCal func)
+            printFunctionsList rest
+evalProc exec (_, functions) (Exec ["strategy", "no"]) = do
     outputStrLn "Strategy : Normal Order"
     exec (NormalOrder, functions)
-evalProc (_, functions) exec (Exec ["strategy", "cn"]) = do
+evalProc exec (_, functions) (Exec ["strategy", "cn"]) = do
     outputStrLn "Strategy : Call by Name"
     exec (CallByName, functions)
-evalProc (_, functions) exec (Exec ["strategy", "cv"]) = do
+evalProc exec (_, functions) (Exec ["strategy", "cv"]) = do
     outputStrLn "Strategy : Call by Value"
     exec (CallByValue, functions)
 evalProc _ _ (Exec ["exit"]) = do
     outputStrLn "Quit."
-evalProc config exec _ = do
+evalProc exec config _ = do
     outputStrLn "Invalid command."
     exec config
-
-printFunctions :: [(String, LambdaCal)] -> InputT IO ()
-printFunctions [] = pure ()
-printFunctions ((name, func) : rest) = do
-    outputStrLn (name ++ " = " ++ showLambdaCal func)
-    printFunctions rest
