@@ -74,6 +74,15 @@ evalProc exec (strategy, functions) (Exec ["list"]) = do
         printFunctionsList ((name, func) : rest) = do
             outputStrLn (name ++ " = " ++ showLambdaCal func)
             printFunctionsList rest
+evalProc exec (NormalOrder, functions) (Exec ["strategy"]) = do
+    outputStrLn "Current strategy : Normal Order"
+    exec (NormalOrder, functions)
+evalProc exec (CallByName, functions) (Exec ["strategy"]) = do
+    outputStrLn "Current strategy : Call by Name"
+    exec (CallByName, functions)
+evalProc exec (CallByValue, functions) (Exec ["strategy"]) = do
+    outputStrLn "Current strategy : Call by Value"
+    exec (CallByValue, functions)
 evalProc exec (_, functions) (Exec ["strategy", "no"]) = do
     outputStrLn "Strategy : Normal Order"
     exec (NormalOrder, functions)
