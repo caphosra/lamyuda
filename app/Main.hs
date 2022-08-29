@@ -62,8 +62,8 @@ evalProc exec (strategy, functions) (FuncDef name term)
         updated = (name, term) : filter ((name /=) . fst) functions
 evalProc exec (strategy, functions) (Eval cal) = do
     outputStrLn (showLambdaCal cal)
-    replaced <- liftIO $ replaceFunction 0 cal functions
-    liftIO $ betaReduction (beta strategy) replaced [replaced]
+    replaced <- liftIO $ replaceFunction 5 cal functions
+    liftIO $ betaReduction 30 (beta strategy) replaced [replaced]
     exec (strategy, functions)
 evalProc exec (strategy, functions) (Exec ["list"]) = do
     printFunctionsList functions
