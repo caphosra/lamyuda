@@ -20,6 +20,8 @@ description:         Please see the README on GitHub at <https://github.com/caph
 
 dependencies:
 - base >= 4.7 && < 5
+- haskeline
+- tuple
 
 ghc-options:
 - -Wall

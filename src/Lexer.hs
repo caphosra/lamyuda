@@ -5,12 +5,15 @@ module Lexer (
         Sep,
         Equal,
         LeftParen,
-        RightParen
+        RightParen,
+        Command
     ),
+    toStr,
+    lengthOfToken,
     tokenize
 ) where
 
-import Data.Char (isAlphaNum, isSpace)
+import Data.Char (isAlphaNum)
 
 import Result
 
@@ -22,32 +25,50 @@ data Token
     | Equal         -- "="
     | LeftParen     -- "("
     | RightParen    -- ")"
+    | Command       -- "#"
     deriving (Eq, Show)
 
 -- Holds a result of lexing.
-type LexerResult = Result [Token] String
+type LexerResult = Result [(Int, Token)] (Int, String)
 
--- Concatenates a token with the result of lexing on a part of the string.
-concatResult :: Token -> LexerResult -> LexerResult
-concatResult f s =
-    case (f, s) of
-        (token1, Valid token2) -> Valid (token1 : token2)
-        (_, Error msg) -> Error msg
+-- Converts a token to a string.
+toStr :: Token -> String
+toStr Lambda = "lambda"
+toStr (Ident name) = name
+toStr Sep = "."
+toStr Equal = "="
+toStr LeftParen = "("
+toStr RightParen = ")"
+toStr Command = "#"
+
+-- Returns the length of the token.
+lengthOfToken :: Token -> Int
+lengthOfToken = length . toStr
+
+-- Prepends a token to the result of lexing.
+prependTokens :: Int -> Token -> String -> LexerResult
+prependTokens pos token rest =
+    mapResult (tokenize' nextPos rest) ((pos, token) :)
+    where
+        nextPos = pos + lengthOfToken token
 
 -- Tokenizes characters.
 tokenize :: String -> LexerResult
-tokenize s =
-    case spaceRemoved of
-        "" -> Valid []
-        '.' : rest -> concatResult Sep (tokenize rest)
-        '=' : rest -> concatResult Equal (tokenize rest)
-        '(' : rest -> concatResult LeftParen (tokenize rest)
-        ')' : rest -> concatResult RightParen (tokenize rest)
-        _ -> case token of
-            "" -> Error (take 1 spaceRemoved)
-            "lambda" -> concatResult Lambda (tokenize next)
-            name -> concatResult (Ident name) (tokenize next)
+tokenize = tokenize' 0
+
+-- Tokenizes characters. It also tracks the position.
+tokenize' :: Int -> String -> LexerResult
+tokenize' _ "" = Valid []
+tokenize' pos (' ' : rest) = tokenize' (pos + 1) rest
+tokenize' pos ('.' : rest) = prependTokens pos Sep rest
+tokenize' pos ('=' : rest) = prependTokens pos Equal rest
+tokenize' pos ('(' : rest) = prependTokens pos LeftParen rest
+tokenize' pos (')' : rest) = prependTokens pos RightParen rest
+tokenize' pos ('#' : rest) = prependTokens pos Command rest
+tokenize' pos s
+    | token == "" = Error (pos, take 1 s)
+    | token == "lambda" = prependTokens pos Lambda next
+    | otherwise = prependTokens pos (Ident token) next
     where
-        spaceRemoved = dropWhile isSpace s
-        token = takeWhile isAlphaNum spaceRemoved
-        next = dropWhile isAlphaNum spaceRemoved
+        token = takeWhile isAlphaNum s
+        next = dropWhile isAlphaNum s
