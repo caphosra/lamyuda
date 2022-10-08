@@ -50,7 +50,7 @@ removeMark (App child1 child2) = App (removeMark child1) (removeMark child2)
 --
 -- Substitutes the variables. Don't confuse with `substVariable`.
 --
-substAll :: [(String, Term)] -> Term -> Term
+substAll :: Context -> Term -> Term
 
 substAll vars term =
     removeMark

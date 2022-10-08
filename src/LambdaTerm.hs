@@ -4,6 +4,7 @@ module LambdaTerm (
         Abst,
         App
     ),
+    Context,
     showTerm,
 ) where
 
@@ -15,6 +16,11 @@ data Term
     | Abst String Term  -- λx. M
     | App Term Term     -- M M
     deriving (Eq, Show)
+
+--
+-- A representation of a context.
+--
+type Context = [(String, Term)]
 
 --
 -- Wraps a term with parentheses if it is not a variable.

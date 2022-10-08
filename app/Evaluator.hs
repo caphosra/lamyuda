@@ -4,7 +4,6 @@ module Evaluator (
 ) where
 
 import BetaReduction
-import Configuration
 import LambdaTerm
 import Operation
 import Preprocess

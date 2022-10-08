@@ -7,7 +7,6 @@ module Configuration (
         KeepAlive,
         Quit
     ),
-    Context,
     Config,
     ConfigMod,
     unmodified,
@@ -33,11 +32,6 @@ data Diff a
 data PromptResult
     = KeepAlive ConfigMod
     | Quit
-
---
--- Represents a context Γ.
---
-type Context = [(String, Term)]
 
 --
 -- A configuration of the prompt.

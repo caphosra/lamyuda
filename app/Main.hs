@@ -95,7 +95,7 @@ doEvaluate (_, context) (Exec ["list"]) = do
     printContext context
     return $ KeepAlive unmodified
     where
-        printContext :: [(String, Term)] -> IO ()
+        printContext :: Context -> IO ()
 
         printContext [] = return ()
 
