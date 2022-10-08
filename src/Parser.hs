@@ -145,12 +145,12 @@ parseStatement :: [(Int, Token)] -> ParserResult
 
 parseStatement ((_, Ident name) : (_, Equal) : rest) =
     case parseTerm rest of
-        Valid cal -> Valid (FuncDef name cal)
+        Valid term -> Valid (FuncDef name term)
         Error err -> Error err
 
 parseStatement ((_, Command) : rest) = Valid (Exec (map (show . snd) rest))
 
 parseStatement tokens =
     case parseTerm tokens of
-        Valid cal -> Valid (Eval cal)
+        Valid term -> Valid (Eval term)
         Error err -> Error err

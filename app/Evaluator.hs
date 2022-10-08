@@ -22,7 +22,7 @@ doSubstituteTerms depth context term
         doSubstituteTerms (depth - 1) context substituted
     | otherwise = return term
     where
-        substituted = replaceBuiltin . substAll context $ term
+        substituted = substBuiltin . substAll context $ term
 
 --
 -- Performs beta reduction on the term under the strategy.
