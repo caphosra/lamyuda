@@ -11,15 +11,15 @@ module BetaReduction (
     beta,
 ) where
 
-import LambdaCalculus
+import LambdaTerm
 import Operation
 
 --
 -- Holds a result of beta-reduction.
 --
 data ReductionResult
-    = Reduced LambdaCal
-    | NormalForm LambdaCal
+    = Reduced Term
+    | NormalForm Term
 
 --
 -- A strategy conducting beta-reduction repeatedly.
@@ -32,7 +32,7 @@ data ReductionStrategy
 --
 -- Applies a function to the term of the result.
 --
-mapResult :: ReductionResult -> (LambdaCal -> LambdaCal) -> ReductionResult
+mapResult :: ReductionResult -> (Term -> Term) -> ReductionResult
 
 mapResult (Reduced term) f = Reduced (f term)
 
@@ -41,7 +41,7 @@ mapResult (NormalForm term) f = NormalForm (f term)
 --
 -- Conducts beta-reduction.
 --
-beta :: ReductionStrategy -> LambdaCal -> ReductionResult
+beta :: ReductionStrategy -> Term -> ReductionResult
 
 beta NormalOrder = betaNO
 
@@ -52,7 +52,7 @@ beta CallByValue = betaCV
 --
 -- Conducts beta-reduction with the normal form strategy.
 --
-betaNO :: LambdaCal -> ReductionResult
+betaNO :: Term -> ReductionResult
 
 betaNO (Abst name child) = mapResult (betaNO child) (Abst name)
 
@@ -68,7 +68,7 @@ betaNO term = NormalForm term
 --
 -- Conducts beta-reduction with the call by name strategy.
 --
-betaCN :: LambdaCal -> ReductionResult
+betaCN :: Term -> ReductionResult
 
 betaCN (App (Abst name child) arg) = Reduced (replaceVariable name arg child)
 
@@ -82,7 +82,7 @@ betaCN term = NormalForm term
 --
 -- Conducts beta-reduction with the call by value strategy.
 --
-betaCV :: LambdaCal -> ReductionResult
+betaCV :: Term -> ReductionResult
 
 betaCV (App (Abst name1 child1) (Abst name2 child2)) =
     Reduced (replaceVariable name1 (Abst name2 child2) child1)

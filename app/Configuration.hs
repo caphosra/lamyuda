@@ -18,7 +18,7 @@ module Configuration (
 import Data.Tuple.All
 
 import BetaReduction
-import LambdaCalculus
+import LambdaTerm
 
 --
 -- Represents a difference if exists.
@@ -37,7 +37,7 @@ data PromptResult
 --
 -- Represents a context Γ.
 --
-type Context = [(String, LambdaCal)]
+type Context = [(String, Term)]
 
 --
 -- A configuration of the prompt.

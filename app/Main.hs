@@ -7,7 +7,7 @@ import System.IO
 import BetaReduction
 import Configuration
 import Evaluator
-import LambdaCalculus
+import LambdaTerm
 import Lexer
 import Parser
 import Result
@@ -70,18 +70,18 @@ doEvaluate :: Config -> Statement -> IO PromptResult
 doEvaluate (_, context) (FuncDef name term)
     | any ((== name) . fst) context = do
         putStrLn $ "\"" ++ name ++ "\" was already defined."
-        putStrLn $ "Previous : " ++ name ++ " = " ++ showLambdaCal prevTerm
-        putStrLn $ "Redefined: " ++ name ++ " = " ++ showLambdaCal term
+        putStrLn $ "Previous : " ++ name ++ " = " ++ showTerm prevTerm
+        putStrLn $ "Redefined: " ++ name ++ " = " ++ showTerm term
         return $ KeepAlive (Unmodified, Modified updated)
     | otherwise = do
-        putStrLn $ "Defined: " ++ name ++ " = " ++ showLambdaCal term
+        putStrLn $ "Defined: " ++ name ++ " = " ++ showTerm term
         return $ KeepAlive (Unmodified, Modified updated)
     where
         prevTerm = snd $ head $ filter ((== name) . fst) context
         updated = (name, term) : filter ((/= name) . fst) context
 
 doEvaluate (strategy, context) (Eval term) = do
-    putStrLn (showLambdaCal term)
+    putStrLn (showTerm term)
     substituted <- liftIO $ doSubstituteTerms 5 context term
     liftIO $ doBetaReduction 30 strategy substituted
     return $ KeepAlive unmodified
@@ -94,12 +94,12 @@ doEvaluate (_, context) (Exec ["list"]) = do
     printContext context
     return $ KeepAlive unmodified
     where
-        printContext :: [(String, LambdaCal)] -> IO ()
+        printContext :: [(String, Term)] -> IO ()
 
         printContext [] = return ()
 
         printContext ((name, term) : rest) = do
-            putStrLn $ name ++ " = " ++ showLambdaCal term
+            putStrLn $ name ++ " = " ++ showTerm term
             printContext rest
 
 doEvaluate (NormalOrder, _) (Exec ["strategy"]) = do
