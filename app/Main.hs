@@ -13,91 +13,123 @@ import Parser
 import Result
 
 main :: IO ()
+
 main = do
     hSetEncoding stdin utf8
     hSetEncoding stdout utf8
-    putStrLn "Lamdba -- a simple lambda calculus operator"
+    putStrLn "Lamdba -- a simple lambda terms operator"
     runInputT defaultSettings (promptLoop defaultConfig)
 
+--
+-- Receives an input and evaluates it if valid.
+--
 promptLoop :: Config -> InputT IO ()
+
 promptLoop config = do
     rawInput <- getInputLine "> "
     case rawInput of
         Just input -> do
             result <- liftIO
-                $ tokenizerProc input
-                $ parserProc
-                $ evalProc config
+                $ doTokenize input
+                $ doParse
+                $ doEvaluate config
             case result of
                 KeepAlive diff ->
                     promptLoop $ applyDiff diff config
                 Quit -> return ()
         Nothing -> return ()
+--
+-- Tokenizes the input. If succeed, it executes `post`.
+--
+doTokenize :: String -> ([(Int, Token)] -> IO PromptResult) -> IO PromptResult
 
-tokenizerProc :: String -> ([(Int, Token)] -> IO PromptResult) -> IO PromptResult
-tokenizerProc input postProc = do
+doTokenize input post = do
     case tokenize input of
-        Valid tokens -> postProc tokens
-        Error (pos, c) -> do
-            putStrLn ("Lexer error: An invalid character \"" ++ c ++ "\" was found at " ++ show pos)
+        Valid tokens -> post tokens
+        Error (pos, chr) -> do
+            putStrLn $ "Lexer error: An invalid character \"" ++ chr ++ "\" was found at " ++ show pos
             return $ KeepAlive unmodified
 
-parserProc :: (Statement -> IO PromptResult) -> [(Int, Token)] -> IO PromptResult
-parserProc postProc tokens = do
+--
+-- Parses the stream of tokens into an AST or a command. If succeed, it executes `post`.
+--
+doParse :: (Statement -> IO PromptResult) -> [(Int, Token)] -> IO PromptResult
+
+doParse post tokens = do
     case parseStatement tokens of
-        Valid st -> postProc st
-        Error (pos, c) -> do
-            putStrLn ("Syntax error: An unexpected token \"" ++ toStr c ++ "\" was found at " ++ show pos)
+        Valid stmt -> post stmt
+        Error (pos, token) -> do
+            putStrLn $ "Syntax error: An unexpected token \"" ++ toStr token ++ "\" was found at " ++ show pos
             return $ KeepAlive unmodified
 
-evalProc :: Config -> Statement -> IO PromptResult
-evalProc (_, functions) (FuncDef name term)
-    | any ((name ==) . fst) functions = do
-        putStrLn ("\"" ++ name ++ "\" was already defined.")
-        putStrLn ("Previous : " ++ name ++ " = " ++ showLambdaCal prevTerm)
-        putStrLn ("Redefined: " ++ name ++ " = " ++ showLambdaCal term)
+--
+-- Evaluates the AST. That can be a command started with a character "#".
+--
+doEvaluate :: Config -> Statement -> IO PromptResult
+
+doEvaluate (_, context) (FuncDef name term)
+    | any ((== name) . fst) context = do
+        putStrLn $ "\"" ++ name ++ "\" was already defined."
+        putStrLn $ "Previous : " ++ name ++ " = " ++ showLambdaCal prevTerm
+        putStrLn $ "Redefined: " ++ name ++ " = " ++ showLambdaCal term
         return $ KeepAlive (Unmodified, Modified updated)
     | otherwise = do
-        putStrLn ("Defined: " ++ name ++ " = " ++ showLambdaCal term)
+        putStrLn $ "Defined: " ++ name ++ " = " ++ showLambdaCal term
         return $ KeepAlive (Unmodified, Modified updated)
     where
-        prevTerm = snd $ head $ filter ((name ==) . fst) functions
-        updated = (name, term) : filter ((name /=) . fst) functions
-evalProc (strategy, functions) (Eval cal) = do
-    putStrLn (showLambdaCal cal)
-    replaced <- liftIO $ replaceFunction 5 cal functions
-    liftIO $ betaReduction 30 (beta strategy) replaced [replaced]
+        prevTerm = snd $ head $ filter ((== name) . fst) context
+        updated = (name, term) : filter ((/= name) . fst) context
+
+doEvaluate (strategy, context) (Eval term) = do
+    putStrLn (showLambdaCal term)
+    substituted <- liftIO $ doSubstituteTerms 5 context term
+    liftIO $ doBetaReduction 30 strategy substituted
     return $ KeepAlive unmodified
-evalProc (_, functions) (Exec ["list"]) = do
-    printFunctionsList functions
+
+doEvaluate (_, []) (Exec ["list"]) = do
+    putStrLn "No terms defined in the context."
+    return $ KeepAlive unmodified
+
+doEvaluate (_, context) (Exec ["list"]) = do
+    printContext context
     return $ KeepAlive unmodified
     where
-        printFunctionsList :: [(String, LambdaCal)] -> IO ()
-        printFunctionsList [] = return ()
-        printFunctionsList ((name, func) : rest) = do
-            putStrLn (name ++ " = " ++ showLambdaCal func)
-            printFunctionsList rest
-evalProc (NormalOrder, _) (Exec ["strategy"]) = do
+        printContext :: [(String, LambdaCal)] -> IO ()
+
+        printContext [] = return ()
+
+        printContext ((name, term) : rest) = do
+            putStrLn $ name ++ " = " ++ showLambdaCal term
+            printContext rest
+
+doEvaluate (NormalOrder, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Normal Order"
     return $ KeepAlive unmodified
-evalProc (CallByName, _) (Exec ["strategy"]) = do
+
+doEvaluate (CallByName, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Call by Name"
     return $ KeepAlive unmodified
-evalProc (CallByValue, _) (Exec ["strategy"]) = do
+
+doEvaluate (CallByValue, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Call by Value"
     return $ KeepAlive unmodified
-evalProc (_, _) (Exec ["strategy", "no"]) = do
+
+doEvaluate (_, _) (Exec ["strategy", "no"]) = do
     putStrLn "Strategy : Normal Order"
     return $ KeepAlive (Modified NormalOrder, Unmodified)
-evalProc (_, _) (Exec ["strategy", "cn"]) = do
+
+doEvaluate (_, _) (Exec ["strategy", "cn"]) = do
     putStrLn "Strategy : Call by Name"
     return $ KeepAlive (Modified CallByName, Unmodified)
-evalProc (_, _) (Exec ["strategy", "cv"]) = do
+
+doEvaluate (_, _) (Exec ["strategy", "cv"]) = do
     putStrLn "Strategy : Call by Value"
     return $ KeepAlive (Modified CallByValue, Unmodified)
-evalProc _ (Exec ["exit"]) = do
+
+doEvaluate _ (Exec ["exit"]) = do
     putStrLn "Quit."
     return Quit
-evalProc _ _ = do
+
+doEvaluate _ _ = do
     putStrLn "Invalid command."
     return $ KeepAlive unmodified
