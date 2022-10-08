@@ -102,7 +102,7 @@ parseStatement ((_, Ident name) : (_, Equal) : rest) =
     case parseTerm rest of
         Valid cal -> Valid (FuncDef name cal)
         Error err -> Error err
-parseStatement ((_, Command) : rest) = Valid (Exec (map (toStr . snd) rest))
+parseStatement ((_, Command) : rest) = Valid (Exec (map (show . snd) rest))
 parseStatement tokens =
     case parseTerm tokens of
         Valid cal -> Valid (Eval cal)

@@ -38,6 +38,7 @@ promptLoop config = do
                     promptLoop $ applyDiff diff config
                 Quit -> return ()
         Nothing -> return ()
+
 --
 -- Tokenizes the input. If succeed, it executes `post`.
 --
@@ -59,7 +60,7 @@ doParse post tokens = do
     case parseStatement tokens of
         Valid stmt -> post stmt
         Error (pos, token) -> do
-            putStrLn $ "Syntax error: An unexpected token \"" ++ toStr token ++ "\" was found at " ++ show pos
+            putStrLn $ "Syntax error: An unexpected token \"" ++ show token ++ "\" was found at " ++ show pos
             return $ KeepAlive unmodified
 
 --
