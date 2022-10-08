@@ -1,39 +1,58 @@
 module Operation (
-    replaceVariable,
-    replaceAll,
+    substVariable,
+    substAll,
 ) where
 
 import Data.Bifunctor (Bifunctor(second))
 
-import LambdaCalculus
+import LambdaTerm
 
--- Replaces the variable with the function given.
-replaceVariable :: String -> LambdaCal -> LambdaCal -> LambdaCal
-replaceVariable v replaceTo (Variable name)
-    | name == v = replaceTo
+--
+-- Substitutes the variable with the term.
+--
+substVariable :: String -> Term -> Term -> Term
+
+substVariable v subst (Variable name)
+    | name == v = subst
     | otherwise = Variable name
-replaceVariable v replaceTo (Abst name cal)
-    | name == v = Abst name cal
-    | otherwise = Abst name (replaceVariable v replaceTo cal)
-replaceVariable v replaceTo (App left right) =
-    App (replaceVariable v replaceTo left) (replaceVariable v replaceTo right)
 
+substVariable v subst (Abst name term)
+    | name == v = Abst name term
+    | otherwise = Abst name (substVariable v subst term)
+
+substVariable v subst (App left right) =
+    App (substVariable v subst left) (substVariable v subst right)
+
+--
 -- Prepends "!" marks to all of the variables in the term.
-prependMark :: LambdaCal -> LambdaCal
+--
+prependMark :: Term -> Term
+
 prependMark (Variable name) = Variable ("!" ++ name)
+
 prependMark (Abst name child) = Abst name (prependMark child)
+
 prependMark (App child1 child2) = App (prependMark child1) (prependMark child2)
 
+--
 -- Removes "!" marks from the variables.
-removeMark :: LambdaCal -> LambdaCal
+--
+removeMark :: Term -> Term
+
 removeMark (Variable ('!' : rest)) = Variable rest
+
 removeMark (Variable name) = Variable name
+
 removeMark (Abst name child) = Abst name (removeMark child)
+
 removeMark (App child1 child2) = App (removeMark child1) (removeMark child2)
 
--- Replaces the variables. Don't confuse with `replaceVariable`.
-replaceAll :: [(String, LambdaCal)] -> LambdaCal -> LambdaCal
-replaceAll vars cal =
+--
+-- Substitutes the variables. Don't confuse with `substVariable`.
+--
+substAll :: Context -> Term -> Term
+
+substAll vars term =
     removeMark
-    $ foldl (flip (uncurry replaceVariable)) cal
+    $ foldl (flip (uncurry substVariable)) term
     $ map (second prependMark) vars
