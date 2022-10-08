@@ -25,6 +25,6 @@ replaceNum (App left right) = App (replaceNum left) (replaceNum right)
 replaceBuiltin :: Term -> Term
 replaceBuiltin =
     replaceNum
-    . replaceVariable "true" (Abst "t" (Abst "f" (Variable "t")))
-    . replaceVariable "false" (Abst "t" (Abst "f" (Variable "f")))
-    . replaceVariable "test" (Abst "b" (Abst "c" (Abst "d" (App (App (Variable "b") (Variable "c")) (Variable "d")))))
+    . substVariable "true" (Abst "t" (Abst "f" (Variable "t")))
+    . substVariable "false" (Abst "t" (Abst "f" (Variable "f")))
+    . substVariable "test" (Abst "b" (Abst "c" (Abst "d" (App (App (Variable "b") (Variable "c")) (Variable "d")))))

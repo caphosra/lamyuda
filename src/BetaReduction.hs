@@ -52,7 +52,7 @@ beta NormalOrder = betaNO
 
         betaNO (Abst name child) = mapResult (betaNO child) (Abst name)
 
-        betaNO (App (Abst name child) arg) = Reduced (replaceVariable name arg child)
+        betaNO (App (Abst name child) arg) = Reduced (substVariable name arg child)
 
         betaNO (App left right) =
             case betaNO left of
@@ -68,7 +68,7 @@ beta CallByName = betaCN
         --
         betaCN :: Term -> ReductionResult
 
-        betaCN (App (Abst name child) arg) = Reduced (replaceVariable name arg child)
+        betaCN (App (Abst name child) arg) = Reduced (substVariable name arg child)
 
         betaCN (App left right) =
             case betaCN left of
@@ -85,7 +85,7 @@ beta CallByValue = betaCV
         betaCV :: Term -> ReductionResult
 
         betaCV (App (Abst name1 child1) (Abst name2 child2)) =
-            Reduced (replaceVariable name1 (Abst name2 child2) child1)
+            Reduced (substVariable name1 (Abst name2 child2) child1)
 
         betaCV (App left right) =
             case betaCV left of
