@@ -10,6 +10,7 @@ module Configuration (
     Config,
     ConfigMod,
     unmodified,
+    toConfigMod,
     defaultConfig,
     applyDiff
 ) where
@@ -49,6 +50,14 @@ type ConfigMod = (Diff ReductionStrategy, Diff Context)
 unmodified :: ConfigMod
 
 unmodified = (Unmodified, Unmodified)
+
+--
+-- Converts a configuration into a diff.
+--
+toConfigMod :: Config -> ConfigMod
+
+toConfigMod (strategy, context) =
+    (Modified strategy, Modified context)
 
 --
 -- The default configuration.
