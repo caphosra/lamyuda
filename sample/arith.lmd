@@ -1,0 +1,3 @@
+add = lambda m. lambda n. lambda s. lambda z. n s (m s z)
+mul = lambda m. lambda n. lambda s. n (m s)
+exp = lambda m. lambda n. n m
