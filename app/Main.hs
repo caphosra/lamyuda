@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Control.Monad.IO.Class
+import Data.List.Split
 import System.Console.Haskeline
 import System.IO
 
@@ -126,6 +127,28 @@ doEvaluate (_, _) (Exec ["strategy", "cn"]) = do
 doEvaluate (_, _) (Exec ["strategy", "cv"]) = do
     putStrLn "Strategy : Call by Value"
     return $ KeepAlive (Modified CallByValue, Unmodified)
+
+doEvaluate config (Exec ["eval", source]) = do
+    content <- readFile path
+    newConfig <- evalOnce config $ splitOn "\n" content
+    return $ KeepAlive $ toConfigMod newConfig
+    where
+        path = take (length source - 2) $ drop 1 source
+
+        evalOnce :: Config -> [String] -> IO Config
+
+        evalOnce newConfig [] = do return newConfig
+
+        evalOnce newConfig (input : rest) = do
+            putStrLn $ ">> " ++ input
+            result <-
+                doTokenize input
+                $ doParse
+                $ doEvaluate newConfig
+            case result of
+                KeepAlive diff ->
+                    evalOnce (applyDiff diff newConfig) rest
+                Quit -> return newConfig
 
 doEvaluate _ (Exec ["exit"]) = do
     putStrLn "Quit."

@@ -26,6 +26,7 @@ data Token
     | LeftParen     -- "("
     | RightParen    -- ")"
     | Command       -- "#"
+    | Text String   -- a text, such as "\"some\""
     deriving Eq
 
 instance Show Token
@@ -43,6 +44,8 @@ instance Show Token
         show RightParen = ")"
 
         show Command = "#"
+
+        show (Text name) = "\"" ++ name ++ "\""
 
 --
 -- Holds a result of lexing.
@@ -84,6 +87,12 @@ tokenize = tokenize' 0
         tokenize' pos (')' : rest) = prependTokens pos RightParen rest
 
         tokenize' pos ('#' : rest) = prependTokens pos Command rest
+
+        tokenize' pos ('"' : rest) =
+            prependTokens pos (Text text) remain
+            where
+                text = takeWhile (/= '"') rest
+                remain = drop 1 $ dropWhile (/= '"') rest
 
         tokenize' pos s
             | token == "" = Error (pos, take 1 s)
