@@ -94,9 +94,13 @@ tokenize = tokenize' 0
                 text = takeWhile (/= '"') rest
                 remain = drop 1 $ dropWhile (/= '"') rest
 
+        tokenize' pos ('\\' : rest) =
+            prependTokens pos Lambda rest
+
         tokenize' pos s
             | token == "" = Error (pos, take 1 s)
             | token == "lambda" = prependTokens pos Lambda next
+            | token == "lmd" = prependTokens pos Lambda next
             | otherwise = prependTokens pos (Ident token) next
             where
                 token = takeWhile isAlphaNum s
