@@ -18,10 +18,31 @@ substVariable v subst (Variable name)
 
 substVariable v subst (Abst name term)
     | name == v = Abst name term
+    | isFreeVariable name subst = substVariable v subst $ Abst newName (substVariable name (Variable newName) term)
     | otherwise = Abst name (substVariable v subst term)
+    where
+        generateNewName name' = if isFreeVariable newName' term
+            then generateNewName newName'
+            else newName'
+            where
+                newName' = name' ++ "\'"
+        newName = generateNewName name
 
 substVariable v subst (App left right) =
     App (substVariable v subst left) (substVariable v subst right)
+
+--
+-- Check whether the variable is captured or not.
+--
+isFreeVariable :: String -> Term -> Bool
+
+isFreeVariable v (Variable name) = v == name
+
+isFreeVariable v (Abst name term)
+    | name == v = False
+    | otherwise = isFreeVariable v term
+
+isFreeVariable v (App left right) = isFreeVariable v left || isFreeVariable v right
 
 --
 -- Prepends "!" marks to all of the variables in the term.
@@ -41,11 +62,11 @@ removeMark :: Term -> Term
 
 removeMark (Variable ('!' : rest)) = Variable rest
 
-removeMark (Variable name) = Variable name
-
 removeMark (Abst name child) = Abst name (removeMark child)
 
 removeMark (App child1 child2) = App (removeMark child1) (removeMark child2)
+
+removeMark term = term
 
 --
 -- Substitutes the variables. Don't confuse with `substVariable`.
