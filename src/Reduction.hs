@@ -9,6 +9,7 @@ module Reduction (
         CallByValue
     ),
     beta,
+    eta,
 ) where
 
 import LambdaTerm
@@ -93,3 +94,21 @@ beta CallByValue = betaCV
                 NormalForm _ -> mapResult (betaCV right) (App left)
 
         betaCV term = NormalForm term
+
+--
+-- Conducts eta-reduction.
+--
+eta :: Term -> ReductionResult
+
+eta (Abst name (App child (Variable v)))
+    | name == v = Reduced child
+    | otherwise = mapResult (eta child) (\term -> Abst name (App term (Variable v)))
+
+eta (Abst name term) = mapResult (eta term) (Abst name)
+
+eta (App left right) =
+    case eta left of
+        Reduced red -> Reduced (App red right)
+        NormalForm _ -> mapResult (eta right) (App left)
+
+eta term = NormalForm term
