@@ -3,7 +3,7 @@ module Evaluator (
     doBetaReduction
 ) where
 
-import BetaReduction
+import Reduction
 import LambdaTerm
 import Operation
 import Preprocess

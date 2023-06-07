@@ -1,4 +1,4 @@
-module BetaReduction (
+module Reduction (
     ReductionResult (
         Reduced,
         NormalForm

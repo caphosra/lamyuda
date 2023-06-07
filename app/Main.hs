@@ -5,7 +5,7 @@ import Data.List.Split
 import System.Console.Haskeline
 import System.IO
 
-import BetaReduction
+import Reduction
 import Configuration
 import Evaluator
 import LambdaTerm

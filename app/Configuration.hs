@@ -17,7 +17,7 @@ module Configuration (
 
 import Data.Tuple.All
 
-import BetaReduction
+import Reduction
 import LambdaTerm
 
 --
