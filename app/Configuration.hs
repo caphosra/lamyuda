@@ -37,34 +37,34 @@ data PromptResult
 --
 -- A configuration of the prompt.
 --
-type Config = (ReductionStrategy, Context)
+type Config = (ReductionStrategy, ReductionKind, Context)
 
 --
 -- A modification of the configuration.
 --
-type ConfigMod = (Diff ReductionStrategy, Diff Context)
+type ConfigMod = (Diff ReductionStrategy, Diff ReductionKind, Diff Context)
 
 --
 -- Returns a modification that holds "no difference".
 --
 unmodified :: ConfigMod
 
-unmodified = (Unmodified, Unmodified)
+unmodified = (Unmodified, Unmodified, Unmodified)
 
 --
 -- Converts a configuration into a diff.
 --
 toConfigMod :: Config -> ConfigMod
 
-toConfigMod (strategy, context) =
-    (Modified strategy, Modified context)
+toConfigMod (strategy, kind, context) =
+    (Modified strategy, Modified kind, Modified context)
 
 --
 -- The default configuration.
 --
 defaultConfig :: Config
 
-defaultConfig = (NormalOrder, [])
+defaultConfig = (NormalOrder, BetaOnly, [])
 
 --
 -- Applies a modification to the configuration used.
@@ -73,8 +73,10 @@ applyDiff :: ConfigMod -> Config -> Config
 
 applyDiff modification =
     case modification of
-        (Modified strategy, _) ->
+        (Modified strategy, _, _) ->
             applyDiff (upd1 Unmodified modification) . upd1 strategy
-        (_, Modified context) ->
-            applyDiff (upd2 Unmodified modification) . upd2 context
+        (_, Modified kind, _) ->
+            applyDiff (upd2 Unmodified modification) . upd2 kind
+        (_, _, Modified context) ->
+            applyDiff (upd3 Unmodified modification) . upd3 context
         _ -> id
