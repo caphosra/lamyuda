@@ -1,9 +1,9 @@
 module Evaluator (
     doSubstituteTerms,
-    doBetaReduction
+    doReduction
 ) where
 
-import BetaReduction
+import Reduction
 import LambdaTerm
 import Operation
 import Preprocess
@@ -28,24 +28,30 @@ doSubstituteTerms depth context term
 -- Performs beta reduction on the term under the strategy.
 -- If the number of recursions exceeds the limit, it stops performing.
 --
-doBetaReduction :: Int -> ReductionStrategy -> Term -> IO ()
+doReduction :: Int -> ReductionKind -> ReductionStrategy -> Term -> IO ()
 
-doBetaReduction = doBetaReduction' []
+doReduction = doReduction' []
     where
-        doBetaReduction' :: [Term] -> Int -> ReductionStrategy -> Term -> IO ()
+        doReduction' :: [Term] -> Int -> ReductionKind -> ReductionStrategy -> Term -> IO ()
 
-        doBetaReduction' [] depth strategy term =
-            doBetaReduction' [term] depth strategy term
+        doReduction' [] depth kind strategy term =
+            doReduction' [term] depth kind strategy term
 
-        doBetaReduction' _ 0 _ _ = do
+        doReduction' _ 0 _ _ _ = do
             putStrLn "Maybe diverging."
 
-        doBetaReduction' appeared depth strategy term = do
+        doReduction' appeared depth kind strategy term = do
             case beta strategy term of
                 Reduced red -> do
-                    putStrLn ("→ " ++ showTerm red)
-                    if red `elem` appeared then
-                        putStrLn "Diverging."
-                    else
-                        doBetaReduction' (red : appeared) (depth - 1) strategy red
-                NormalForm _ -> putStrLn "Normal form."
+                    putStrLn ("→β " ++ showTerm red)
+                    if red `elem` appeared
+                        then putStrLn "Diverging."
+                        else doReduction' (red : appeared) (depth - 1) kind strategy red
+                _ ->
+                    case (kind, eta term) of
+                        (BetaEta, Reduced red) -> do
+                            putStrLn ("→η " ++ showTerm red)
+                            if red `elem` appeared
+                                then putStrLn "Diverging."
+                                else doReduction' (red : appeared) (depth - 1) kind strategy red
+                        _ -> putStrLn "Normal form."

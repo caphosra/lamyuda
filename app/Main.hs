@@ -5,7 +5,7 @@ import Data.List.Split
 import System.Console.Haskeline
 import System.IO
 
-import BetaReduction
+import Reduction
 import Configuration
 import Evaluator
 import LambdaTerm
@@ -69,30 +69,30 @@ doParse post tokens = do
 --
 doEvaluate :: Config -> Statement -> IO PromptResult
 
-doEvaluate (_, context) (FuncDef name term)
+doEvaluate (_, _, context) (FuncDef name term)
     | any ((== name) . fst) context = do
         putStrLn $ "\"" ++ name ++ "\" was already defined."
         putStrLn $ "Previous : " ++ name ++ " = " ++ showTerm prevTerm
         putStrLn $ "Redefined: " ++ name ++ " = " ++ showTerm term
-        return $ KeepAlive (Unmodified, Modified updated)
+        return $ KeepAlive (Unmodified, Unmodified, Modified updated)
     | otherwise = do
         putStrLn $ "Defined: " ++ name ++ " = " ++ showTerm term
-        return $ KeepAlive (Unmodified, Modified updated)
+        return $ KeepAlive (Unmodified, Unmodified, Modified updated)
     where
         prevTerm = snd $ head $ filter ((== name) . fst) context
         updated = (name, term) : filter ((/= name) . fst) context
 
-doEvaluate (strategy, context) (Eval term) = do
+doEvaluate (strategy, kind, context) (Eval term) = do
     putStrLn (showTerm term)
     substituted <- liftIO $ doSubstituteTerms 5 context term
-    liftIO $ doBetaReduction 30 strategy substituted
+    liftIO $ doReduction 30 kind strategy substituted
     return $ KeepAlive unmodified
 
-doEvaluate (_, []) (Exec ["list"]) = do
+doEvaluate (_, _, []) (Exec ["list"]) = do
     putStrLn "No terms defined in the context."
     return $ KeepAlive unmodified
 
-doEvaluate (_, context) (Exec ["list"]) = do
+doEvaluate (_, _, context) (Exec ["list"]) = do
     printContext context
     return $ KeepAlive unmodified
     where
@@ -104,29 +104,37 @@ doEvaluate (_, context) (Exec ["list"]) = do
             putStrLn $ name ++ " = " ++ showTerm term
             printContext rest
 
-doEvaluate (NormalOrder, _) (Exec ["strategy"]) = do
+doEvaluate (NormalOrder, _, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Normal Order"
     return $ KeepAlive unmodified
 
-doEvaluate (CallByName, _) (Exec ["strategy"]) = do
+doEvaluate (CallByName, _, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Call by Name"
     return $ KeepAlive unmodified
 
-doEvaluate (CallByValue, _) (Exec ["strategy"]) = do
+doEvaluate (CallByValue, _ ,_) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Call by Value"
     return $ KeepAlive unmodified
 
-doEvaluate (_, _) (Exec ["strategy", "no"]) = do
+doEvaluate (_, _, _) (Exec ["strategy", "no"]) = do
     putStrLn "Strategy : Normal Order"
-    return $ KeepAlive (Modified NormalOrder, Unmodified)
+    return $ KeepAlive (Modified NormalOrder, Unmodified, Unmodified)
 
-doEvaluate (_, _) (Exec ["strategy", "cn"]) = do
+doEvaluate (_, _, _) (Exec ["strategy", "cn"]) = do
     putStrLn "Strategy : Call by Name"
-    return $ KeepAlive (Modified CallByName, Unmodified)
+    return $ KeepAlive (Modified CallByName, Unmodified, Unmodified)
 
-doEvaluate (_, _) (Exec ["strategy", "cv"]) = do
+doEvaluate (_, _, _) (Exec ["strategy", "cv"]) = do
     putStrLn "Strategy : Call by Value"
-    return $ KeepAlive (Modified CallByValue, Unmodified)
+    return $ KeepAlive (Modified CallByValue, Unmodified, Unmodified)
+
+doEvaluate (_, _, _) (Exec ["enable", "eta"]) = do
+    putStrLn "η-reduction feature enabled."
+    return $ KeepAlive (Unmodified, Modified BetaEta, Unmodified)
+
+doEvaluate (_, _, _) (Exec ["disable", "eta"]) = do
+    putStrLn "η-reduction feature disabled."
+    return $ KeepAlive (Unmodified, Modified BetaOnly, Unmodified)
 
 doEvaluate config (Exec ["eval", source]) = do
     content <- readFile path

@@ -1,5 +1,6 @@
 module Operation (
     substVariable,
+    isFreeVariable,
     substAll,
 ) where
 
@@ -27,7 +28,6 @@ substVariable v subst (Abst name term)
             where
                 newName' = name' ++ "\'"
         newName = generateNewName name
-
 substVariable v subst (App left right) =
     App (substVariable v subst left) (substVariable v subst right)
 

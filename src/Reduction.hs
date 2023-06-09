@@ -1,7 +1,11 @@
-module BetaReduction (
+module Reduction (
     ReductionResult (
         Reduced,
         NormalForm
+    ),
+    ReductionKind (
+        BetaOnly,
+        BetaEta
     ),
     ReductionStrategy (
         NormalOrder,
@@ -9,17 +13,25 @@ module BetaReduction (
         CallByValue
     ),
     beta,
+    eta,
 ) where
 
 import LambdaTerm
 import Operation
 
 --
--- Holds a result of beta-reduction.
+-- Holds a result of reduction.
 --
 data ReductionResult
     = Reduced Term
     | NormalForm Term
+
+--
+-- An option for selecting reductions.
+--
+data ReductionKind
+    = BetaOnly
+    | BetaEta
 
 --
 -- A strategy conducting beta-reduction repeatedly.
@@ -93,3 +105,21 @@ beta CallByValue = betaCV
                 NormalForm _ -> mapResult (betaCV right) (App left)
 
         betaCV term = NormalForm term
+
+--
+-- Conducts eta-reduction.
+--
+eta :: Term -> ReductionResult
+
+eta (Abst name (App child (Variable v)))
+    | name == v && not (isFreeVariable v child) = Reduced child
+    | otherwise = mapResult (eta child) (\term -> Abst name (App term (Variable v)))
+
+eta (Abst name term) = mapResult (eta term) (Abst name)
+
+eta (App left right) =
+    case eta left of
+        Reduced red -> Reduced (App red right)
+        NormalForm _ -> mapResult (eta right) (App left)
+
+eta term = NormalForm term
