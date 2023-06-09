@@ -101,7 +101,7 @@ beta CallByValue = betaCV
 eta :: Term -> ReductionResult
 
 eta (Abst name (App child (Variable v)))
-    | name == v = Reduced child
+    | name == v && not (isFreeVariable v child) = Reduced child
     | otherwise = mapResult (eta child) (\term -> Abst name (App term (Variable v)))
 
 eta (Abst name term) = mapResult (eta term) (Abst name)
