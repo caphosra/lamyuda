@@ -3,6 +3,10 @@ module Reduction (
         Reduced,
         NormalForm
     ),
+    ReductionKind (
+        BetaOnly,
+        BetaEta
+    ),
     ReductionStrategy (
         NormalOrder,
         CallByName,
@@ -16,11 +20,18 @@ import LambdaTerm
 import Operation
 
 --
--- Holds a result of beta-reduction.
+-- Holds a result of reduction.
 --
 data ReductionResult
     = Reduced Term
     | NormalForm Term
+
+--
+-- An option for selecting reductions.
+--
+data ReductionKind
+    = BetaOnly
+    | BetaEta
 
 --
 -- A strategy conducting beta-reduction repeatedly.

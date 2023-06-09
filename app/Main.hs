@@ -85,7 +85,7 @@ doEvaluate (_, context) (FuncDef name term)
 doEvaluate (strategy, context) (Eval term) = do
     putStrLn (showTerm term)
     substituted <- liftIO $ doSubstituteTerms 5 context term
-    liftIO $ doBetaReduction 30 strategy substituted
+    liftIO $ doReduction 30 BetaOnly strategy substituted
     return $ KeepAlive unmodified
 
 doEvaluate (_, []) (Exec ["list"]) = do
