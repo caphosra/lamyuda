@@ -1,15 +1,11 @@
 FROM ghcr.io/caphosra/haskell:latest
 
-RUN \
-    cd ~; \
-    mkdir lamdba;
+WORKDIR ~/lamdba;
 
 COPY . ~/lamdba
 
-RUN \
-    cd ~/lamdba; \
-    sudo chmod 1777 /tmp; \
-    stack build --copy-bins; \
-    sudo mv ~/.local/bin/lamdba /usr/local/bin;
+RUN sudo chmod 1777 /tmp
+RUN stack build --copy-bins
+RUN sudo mv ~/.local/bin/lamdba /usr/local/bin
 
 ENTRYPOINT ["lamdba"] 
