@@ -1,5 +1,8 @@
 FROM ghcr.io/caphosra/haskell:latest
 
+RUN \
+    mkdir /home/moby/lamdba;
+
 COPY . /home/moby/lamdba
 
 RUN \
