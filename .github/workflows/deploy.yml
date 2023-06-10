@@ -1,0 +1,47 @@
+name: Deployment
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and publish the docker image
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: amd64
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Try building Docker image
+        uses: docker/build-push-action@v4
+        if: github.event.ref != 'refs/heads/master'
+        with:
+          push: false
+          tags: latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        if: github.event.ref == 'refs/heads/master'
+        with:
+          push: true
+          tags: latest

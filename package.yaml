@@ -39,7 +39,7 @@ library:
   source-dirs: src
 
 executables:
-  lamdba-exe:
+  lamdba:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
