@@ -23,7 +23,9 @@ jobs:
 
       - name: Install fourmolu
         run: |
+          su moby
           sudo chmod 1777 /tmp
+          sudo chown -R moby ./
           stack install fourmolu
 
       - name: Check sources in src
