@@ -23,12 +23,13 @@ jobs:
 
       - name: Install fourmolu
         run: |
-          sudo stack install fourmolu
+          chown -R root .
+          stack install fourmolu
 
       - name: Check sources in src
         run: |
-          sudo fourmolu --mode check src
+          fourmolu --mode check src
 
       - name: Check sources in app
         run: |
-          sudo fourmolu --mode check app
+          fourmolu --mode check app
