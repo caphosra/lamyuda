@@ -23,18 +23,12 @@ jobs:
 
       - name: Install fourmolu
         run: |
-          set -eux
-          su - moby
-          whoami
-          sudo chmod 1777 /tmp
-          sudo chown -R moby ./
-          sudo chown -R moby /github/home
-          stack install fourmolu
+          sudo stack install fourmolu
 
       - name: Check sources in src
         run: |
-          fourmolu --mode check src
+          sudo fourmolu --mode check src
 
       - name: Check sources in app
         run: |
-          fourmolu --mode check app
+          sudo fourmolu --mode check app
