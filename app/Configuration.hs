@@ -12,13 +12,13 @@ module Configuration (
     unmodified,
     toConfigMod,
     defaultConfig,
-    applyDiff
+    applyDiff,
 ) where
 
 import Data.Tuple.All
 
-import Reduction
 import LambdaTerm
+import Reduction
 
 --
 -- Represents a difference if exists.
@@ -48,14 +48,12 @@ type ConfigMod = (Diff ReductionStrategy, Diff ReductionKind, Diff Context)
 -- Returns a modification that holds "no difference".
 --
 unmodified :: ConfigMod
-
 unmodified = (Unmodified, Unmodified, Unmodified)
 
 --
 -- Converts a configuration into a diff.
 --
 toConfigMod :: Config -> ConfigMod
-
 toConfigMod (strategy, kind, context) =
     (Modified strategy, Modified kind, Modified context)
 
@@ -63,14 +61,12 @@ toConfigMod (strategy, kind, context) =
 -- The default configuration.
 --
 defaultConfig :: Config
-
 defaultConfig = (NormalOrder, BetaOnly, [])
 
 --
 -- Applies a modification to the configuration used.
 --
 applyDiff :: ConfigMod -> Config -> Config
-
 applyDiff modification =
     case modification of
         (Modified strategy, _, _) ->
