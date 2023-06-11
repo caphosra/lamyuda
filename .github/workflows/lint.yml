@@ -15,12 +15,9 @@ jobs:
 
     container:
       image: ghcr.io/caphosra/haskell:latest
+      options: --user root
 
     steps:
-      - name: Permit editing files in a temp folder
-        run: |
-          sudo chmod 1777 /
-
       - name: Checkout
         uses: actions/checkout@v3
 
