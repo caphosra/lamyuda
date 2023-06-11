@@ -24,7 +24,7 @@ jobs:
       - name: Install fourmolu
         run: |
           chown -R root /github/home
-          stack install fourmolu
+          stack install fourmolu --allow-different-user
 
       - name: Check sources in src
         run: |
