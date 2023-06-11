@@ -45,81 +45,65 @@ data ReductionStrategy
 -- Applies a function to the term of the result.
 --
 mapResult :: ReductionResult -> (Term -> Term) -> ReductionResult
-
 mapResult (Reduced term) f = Reduced (f term)
-
 mapResult (NormalForm term) f = NormalForm (f term)
 
 --
 -- Conducts beta-reduction.
 --
 beta :: ReductionStrategy -> Term -> ReductionResult
-
 beta NormalOrder = betaNO
-    where
-        --
-        -- Conducts beta-reduction with the normal form strategy.
-        --
-        betaNO :: Term -> ReductionResult
+  where
+    --
+    -- Conducts beta-reduction with the normal form strategy.
+    --
+    betaNO :: Term -> ReductionResult
 
-        betaNO (Abst name child) = mapResult (betaNO child) (Abst name)
-
-        betaNO (App (Abst name child) arg) = Reduced (substVariable name arg child)
-
-        betaNO (App left right) =
-            case betaNO left of
-                Reduced red -> Reduced (App red right)
-                NormalForm _ -> mapResult (betaNO right) (App left)
-
-        betaNO term = NormalForm term
-
+    betaNO (Abst name child) = mapResult (betaNO child) (Abst name)
+    betaNO (App (Abst name child) arg) = Reduced (substVariable name arg child)
+    betaNO (App left right) =
+        case betaNO left of
+            Reduced red -> Reduced (App red right)
+            NormalForm _ -> mapResult (betaNO right) (App left)
+    betaNO term = NormalForm term
 beta CallByName = betaCN
-    where
-        --
-        -- Conducts beta-reduction with the call by name strategy.
-        --
-        betaCN :: Term -> ReductionResult
+  where
+    --
+    -- Conducts beta-reduction with the call by name strategy.
+    --
+    betaCN :: Term -> ReductionResult
 
-        betaCN (App (Abst name child) arg) = Reduced (substVariable name arg child)
-
-        betaCN (App left right) =
-            case betaCN left of
-                Reduced red -> Reduced (App red right)
-                NormalForm _ -> mapResult (betaCN right) (App left)
-
-        betaCN term = NormalForm term
-
+    betaCN (App (Abst name child) arg) = Reduced (substVariable name arg child)
+    betaCN (App left right) =
+        case betaCN left of
+            Reduced red -> Reduced (App red right)
+            NormalForm _ -> mapResult (betaCN right) (App left)
+    betaCN term = NormalForm term
 beta CallByValue = betaCV
-    where
-        --
-        -- Conducts beta-reduction with the call by value strategy.
-        --
-        betaCV :: Term -> ReductionResult
+  where
+    --
+    -- Conducts beta-reduction with the call by value strategy.
+    --
+    betaCV :: Term -> ReductionResult
 
-        betaCV (App (Abst name1 child1) (Abst name2 child2)) =
-            Reduced (substVariable name1 (Abst name2 child2) child1)
-
-        betaCV (App left right) =
-            case betaCV left of
-                Reduced red -> Reduced (App red right)
-                NormalForm _ -> mapResult (betaCV right) (App left)
-
-        betaCV term = NormalForm term
+    betaCV (App (Abst name1 child1) (Abst name2 child2)) =
+        Reduced (substVariable name1 (Abst name2 child2) child1)
+    betaCV (App left right) =
+        case betaCV left of
+            Reduced red -> Reduced (App red right)
+            NormalForm _ -> mapResult (betaCV right) (App left)
+    betaCV term = NormalForm term
 
 --
 -- Conducts eta-reduction.
 --
 eta :: Term -> ReductionResult
-
 eta (Abst name (App child (Variable v)))
     | name == v && not (isFreeVariable v child) = Reduced child
     | otherwise = mapResult (eta child) (\term -> Abst name (App term (Variable v)))
-
 eta (Abst name term) = mapResult (eta term) (Abst name)
-
 eta (App left right) =
     case eta left of
         Reduced red -> Reduced (App red right)
         NormalForm _ -> mapResult (eta right) (App left)
-
 eta term = NormalForm term

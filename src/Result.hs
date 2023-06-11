@@ -3,7 +3,7 @@ module Result (
         Valid,
         Error
     ),
-    mapResult
+    mapResult,
 ) where
 
 --
@@ -18,7 +18,5 @@ data Result ok err
 -- Applies a function to the result. If it is `Error`, do nothing.
 --
 mapResult :: Result ok err -> (ok -> ok) -> Result ok err
-
 mapResult (Valid v) f = Valid (f v)
-
 mapResult err _ = err

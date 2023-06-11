@@ -11,4 +11,4 @@ RUN \
     stack build --copy-bins; \
     sudo mv ~/.local/bin/lamdba /usr/local/bin;
 
-ENTRYPOINT ["lamdba"] 
+ENTRYPOINT ["lamdba"]
