@@ -23,7 +23,7 @@ jobs:
 
       - name: Install fourmolu
         run: |
-          chown -R root .
+          chown -R root /github/home
           stack install fourmolu
 
       - name: Check sources in src
