@@ -17,6 +17,11 @@ jobs:
       image: ghcr.io/caphosra/haskell:latest
 
     steps:
+      - name: Create a temp folder
+        run: |
+          sudo mkdir /__w
+          sudo chmod 1777 /__w
+
       - name: Checkout
         uses: actions/checkout@v3
 
