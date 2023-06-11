@@ -24,7 +24,8 @@ jobs:
       - name: Install fourmolu
         run: |
           set -eux
-          su moby
+          su - moby
+          whoami
           sudo chmod 1777 /tmp
           sudo chown -R moby ./
           sudo chown -R moby /github/home
