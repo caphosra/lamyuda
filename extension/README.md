@@ -1,1 +1,1 @@
-# lamdba-vscode
+# lamyuda-vscode

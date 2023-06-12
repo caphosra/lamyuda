@@ -1,6 +1,6 @@
 {
-	"name": "lamdba-vscode",
-	"displayName": "lamdba-vscode",
+	"name": "lamyuda-vscode",
+	"displayName": "lamyuda-vscode",
 	"description": "A simple",
 	"version": "0.0.1",
 	"publisher": "caphosra",
@@ -8,7 +8,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/caphosra/lamdba-vscode"
+		"url": "https://github.com/caphosra/lamyuda-vscode"
 	},
 	"engines": {
 		"vscode": "^1.70.0"
@@ -17,13 +17,13 @@
 		"Programming Languages"
 	],
 	"activationEvents": [
-		"onLanguage:lamdba"
+		"onLanguage:lamyuda"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"languages": [
 			{
-				"id": "lamdba",
+				"id": "lamyuda",
 				"extensions": [
 					".lmd"
 				],
@@ -32,9 +32,9 @@
 		],
 		"grammars": [
 			{
-				"language": "lamdba",
+				"language": "lamyuda",
 				"scopeName": "source.lmd",
-				"path": "./syntaxes/lamdba.tmLanguage.json"
+				"path": "./syntaxes/lamyuda.tmLanguage.json"
 			}
 		]
 	},

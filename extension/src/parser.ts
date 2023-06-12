@@ -22,7 +22,7 @@ interface IAnalyzedToken {
 	tokenType: string;
 }
 
-export class LamdbaParser {
+export class LamyudaParser {
 	private tokenize(text: string): IRawToken[] {
 		let tokens: IRawToken[] = [];
 		const lines = text.split(/\r\n|\r|\n/);
