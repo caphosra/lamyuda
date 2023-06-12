@@ -12,6 +12,8 @@ on:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'continuous development')
+
     runs-on: ubuntu-latest
     name: Build and publish the docker image
 

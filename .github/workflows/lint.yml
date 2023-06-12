@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  build:
+  format:
     runs-on: ubuntu-latest
     name: Check format
 
@@ -28,3 +28,20 @@ jobs:
       - name: Check sources in app
         run: |
           fourmolu --mode check app
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+
+    container:
+      image: ghcr.io/caphosra/haskell:latest
+      options: --user root
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Try building app
+        run: |
+          chown -R root /github/home
+          stack build --allow-different-user
