@@ -45,18 +45,18 @@ jobs:
         if: github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/')
         with:
           push: false
-          tags: ghcr.io/caphosra/lamdba:test
+          tags: ghcr.io/caphosra/lamyuda:test
 
       - name: Build and push Docker image with latest tag
         uses: docker/build-push-action@v4
         if: github.ref == 'refs/heads/master'
         with:
           push: true
-          tags: ghcr.io/caphosra/lamdba:latest
+          tags: ghcr.io/caphosra/lamyuda:latest
 
       - name: Build and push Docker image with version tag
         uses: docker/build-push-action@v4
         if: startsWith(github.ref, 'refs/tags/')
         with:
           push: true
-          tags: ghcr.io/caphosra/lamdba:${{ github.ref_name }}
+          tags: ghcr.io/caphosra/lamyuda:${{ github.ref_name }}

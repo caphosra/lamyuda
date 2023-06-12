@@ -1,14 +1,14 @@
 FROM ghcr.io/caphosra/haskell:latest
 
 RUN \
-    mkdir /home/moby/lamdba;
+    mkdir /home/moby/lamyuda;
 
-COPY . /home/moby/lamdba
+COPY . /home/moby/lamyuda
 
 RUN \
-    cd /home/moby/lamdba; \
+    cd /home/moby/lamyuda; \
     sudo chmod 1777 /tmp; \
     stack build --copy-bins; \
-    sudo mv ~/.local/bin/lamdba /usr/local/bin;
+    sudo mv ~/.local/bin/lamyuda /usr/local/bin;
 
-ENTRYPOINT ["lamdba"]
+ENTRYPOINT ["lamyuda"]

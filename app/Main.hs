@@ -17,7 +17,7 @@ main :: IO ()
 main = do
     hSetEncoding stdin utf8
     hSetEncoding stdout utf8
-    putStrLn "Lamdba -- a simple lambda terms operator"
+    putStrLn "Lamyuda -- a simple lambda terms operator"
     runInputT defaultSettings (promptLoop defaultConfig)
 
 --

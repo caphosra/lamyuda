@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LamdbaParser } from './parser';
+import { LamyudaParser } from './parser';
 
 const tokenTypes = new Map<string, number>();
 const tokenModifiers = new Map<string, number>();
@@ -24,7 +24,7 @@ const legend = (function () {
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.languages.registerDocumentSemanticTokensProvider(
-			{ language: 'lamdba'},
+			{ language: 'lamyuda'},
 			new DocumentSemanticTokensProvider(),
 			legend
 		)
@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
-		const parser = new LamdbaParser();
+		const parser = new LamyudaParser();
 		const allTokens = parser.parse(document.getText());
 		const builder = new vscode.SemanticTokensBuilder();
 		allTokens.forEach((token) => {

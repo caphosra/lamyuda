@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "lamdba",
+	"name": "lamyuda",
 	"patterns": [
 		{
             "include": "#comments"
@@ -30,7 +30,7 @@
 					"match": "(\\#\\s*[a-zA-Z]+)\\s+(.*)",
 					"captures": {
 						"1": {
-							"name": "keyword.control.command.lamdba"
+							"name": "keyword.control.command.lamyuda"
 						},
 						"2": {
 							"patterns": [
@@ -45,7 +45,7 @@
 					"match": "([a-zA-Z][0-9a-z-A-Z]*)\\s*=\\s*(.*)",
 					"captures": {
 						"1": {
-							"name": "entity.name.function.lamdba"
+							"name": "entity.name.function.lamyuda"
 						},
 						"2": {
 							"patterns": [
@@ -79,17 +79,17 @@
 					}
 				},
 				{
-					"name": "constant.numeric.lamdba",
+					"name": "constant.numeric.lamyuda",
 					"match": "[0-9]+(\\.[0-9])*"
 				},
 				{
 					"match": "(lambda)\\s+([a-z-A-Z][0-9a-z-A-Z]*)\\.(.*)",
 					"captures": {
 						"1": {
-							"name": "storage.type.lamdba"
+							"name": "storage.type.lamyuda"
 						},
 						"2": {
-							"name": "variable.parameter.lamdba"
+							"name": "variable.parameter.lamyuda"
 						},
 						"3": {
 							"patterns": [
@@ -101,18 +101,18 @@
 					}
 				},
 				{
-					"name": "variable.other.lamdba",
+					"name": "variable.other.lamyuda",
 					"match": "[a-z-A-Z][0-9a-z-A-Z]*"
 				}
 			]
 		},
 		"strings": {
-			"name": "string.quoted.double.lamdba",
+			"name": "string.quoted.double.lamyuda",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.lamdba",
+					"name": "constant.character.escape.lamyuda",
 					"match": "\\\\."
 				}
 			]
