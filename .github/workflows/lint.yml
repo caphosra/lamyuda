@@ -44,4 +44,4 @@ jobs:
       - name: Try building app
         run: |
           chown -R root /github/home
-          stack build
+          stack build --allow-different-user
