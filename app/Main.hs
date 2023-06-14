@@ -65,27 +65,27 @@ doParse post tokens = do
 -- Evaluates the AST. That can be a command started with a character "#".
 --
 doEvaluate :: Config -> Statement -> IO PromptResult
-doEvaluate (_, _, context) (FuncDef name term)
+doEvaluate (_, _, context, printTerm) (FuncDef name term)
     | any ((== name) . fst) context = do
         putStrLn $ "\"" ++ name ++ "\" was already defined."
-        putStrLn $ "Previous : " ++ name ++ " = " ++ showTerm prevTerm
-        putStrLn $ "Redefined: " ++ name ++ " = " ++ showTerm term
-        return $ KeepAlive (Unmodified, Unmodified, Modified updated)
+        putStrLn $ "Previous : " ++ name ++ " = " ++ printTerm prevTerm
+        putStrLn $ "Redefined: " ++ name ++ " = " ++ printTerm term
+        return $ KeepAlive (Unmodified, Unmodified, Modified updated, Unmodified)
     | otherwise = do
-        putStrLn $ "Defined: " ++ name ++ " = " ++ showTerm term
-        return $ KeepAlive (Unmodified, Unmodified, Modified updated)
+        putStrLn $ "Defined: " ++ name ++ " = " ++ printTerm term
+        return $ KeepAlive (Unmodified, Unmodified, Modified updated, Unmodified)
   where
     prevTerm = snd $ head $ filter ((== name) . fst) context
     updated = (name, term) : filter ((/= name) . fst) context
-doEvaluate (strategy, kind, context) (Eval term) = do
-    putStrLn (showTerm term)
-    substituted <- liftIO $ doSubstituteTerms 5 context term
-    liftIO $ doReduction 30 kind strategy substituted
+doEvaluate (strategy, kind, context, printTerm) (Eval term) = do
+    putStrLn (printTerm term)
+    substituted <- liftIO $ doSubstituteTerms 5 context printTerm term
+    liftIO $ doReduction 30 kind strategy printTerm substituted
     return $ KeepAlive unmodified
-doEvaluate (_, _, []) (Exec ["list"]) = do
+doEvaluate (_, _, [], _) (Exec ["list"]) = do
     putStrLn "No terms defined in the context."
     return $ KeepAlive unmodified
-doEvaluate (_, _, context) (Exec ["list"]) = do
+doEvaluate (_, _, context, printTerm) (Exec ["list"]) = do
     printContext context
     return $ KeepAlive unmodified
   where
@@ -93,32 +93,32 @@ doEvaluate (_, _, context) (Exec ["list"]) = do
 
     printContext [] = return ()
     printContext ((name, term) : rest) = do
-        putStrLn $ name ++ " = " ++ showTerm term
+        putStrLn $ name ++ " = " ++ printTerm term
         printContext rest
-doEvaluate (NormalOrder, _, _) (Exec ["strategy"]) = do
+doEvaluate (NormalOrder, _, _, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Normal Order"
     return $ KeepAlive unmodified
-doEvaluate (CallByName, _, _) (Exec ["strategy"]) = do
+doEvaluate (CallByName, _, _, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Call by Name"
     return $ KeepAlive unmodified
-doEvaluate (CallByValue, _, _) (Exec ["strategy"]) = do
+doEvaluate (CallByValue, _, _, _) (Exec ["strategy"]) = do
     putStrLn "Current strategy : Call by Value"
     return $ KeepAlive unmodified
-doEvaluate (_, _, _) (Exec ["strategy", "no"]) = do
+doEvaluate (_, _, _, _) (Exec ["strategy", "no"]) = do
     putStrLn "Strategy : Normal Order"
-    return $ KeepAlive (Modified NormalOrder, Unmodified, Unmodified)
-doEvaluate (_, _, _) (Exec ["strategy", "cn"]) = do
+    return $ KeepAlive (Modified NormalOrder, Unmodified, Unmodified, Unmodified)
+doEvaluate (_, _, _, _) (Exec ["strategy", "cn"]) = do
     putStrLn "Strategy : Call by Name"
-    return $ KeepAlive (Modified CallByName, Unmodified, Unmodified)
-doEvaluate (_, _, _) (Exec ["strategy", "cv"]) = do
+    return $ KeepAlive (Modified CallByName, Unmodified, Unmodified, Unmodified)
+doEvaluate (_, _, _, _) (Exec ["strategy", "cv"]) = do
     putStrLn "Strategy : Call by Value"
-    return $ KeepAlive (Modified CallByValue, Unmodified, Unmodified)
-doEvaluate (_, _, _) (Exec ["enable", "eta"]) = do
+    return $ KeepAlive (Modified CallByValue, Unmodified, Unmodified, Unmodified)
+doEvaluate (_, _, _, _) (Exec ["enable", "eta"]) = do
     putStrLn "η-reduction feature enabled."
-    return $ KeepAlive (Unmodified, Modified BetaEta, Unmodified)
-doEvaluate (_, _, _) (Exec ["disable", "eta"]) = do
+    return $ KeepAlive (Unmodified, Modified BetaEta, Unmodified, Unmodified)
+doEvaluate (_, _, _, _) (Exec ["disable", "eta"]) = do
     putStrLn "η-reduction feature disabled."
-    return $ KeepAlive (Unmodified, Modified BetaOnly, Unmodified)
+    return $ KeepAlive (Unmodified, Modified BetaOnly, Unmodified, Unmodified)
 doEvaluate config (Exec ["eval", source]) = do
     content <- readFile path
     newConfig <- evalOnce config $ splitOn "\n" content
