@@ -125,6 +125,12 @@ doEvaluate (_, _, _, _) (Exec ["enable", "scheme"]) = do
 doEvaluate (_, _, _, _) (Exec ["disable", "scheme"]) = do
     putStrLn "Scheme-style feature disabled."
     return $ KeepAlive (Unmodified, Unmodified, Unmodified, Modified showTerm)
+doEvaluate (_, _, _, _) (Exec ["enable", "python"]) = do
+    putStrLn "Python-style feature enabled."
+    return $ KeepAlive (Unmodified, Unmodified, Unmodified, Modified showTermPython)
+doEvaluate (_, _, _, _) (Exec ["disable", "python"]) = do
+    putStrLn "Python-style feature disabled."
+    return $ KeepAlive (Unmodified, Unmodified, Unmodified, Modified showTerm)
 doEvaluate config (Exec ["eval", source]) = do
     content <- readFile path
     newConfig <- evalOnce config $ splitOn "\n" content
