@@ -52,7 +52,7 @@ showTermScheme term = case term of
     replacePrime = map (\x -> if x == '\'' then '_' else x)
 
 --
--- Formats a lambda term in Scheme style.
+-- Formats a lambda term in Python style.
 --
 showTermPython :: Term -> String
 showTermPython term = case term of
