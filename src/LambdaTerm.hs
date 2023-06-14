@@ -6,6 +6,7 @@ module LambdaTerm (
     ),
     Context,
     showTerm,
+    showTermScheme,
 ) where
 
 --
@@ -37,3 +38,14 @@ showTerm (Variable name) = name
 showTerm (Abst name term) = "λ" ++ name ++ ". " ++ showTerm term
 showTerm (App (App term1 term2) term3) = showTerm (App term1 term2) ++ " " ++ showTermWithParen term3
 showTerm (App term1 term2) = showTermWithParen term1 ++ " " ++ showTermWithParen term2
+
+--
+-- Formats a lambda term in Scheme style.
+--
+showTermScheme :: Term -> String
+showTermScheme term = case term of
+    Variable name -> replacePrime name
+    Abst name term' -> "(lambda (" ++ replacePrime name ++ ") " ++ showTermScheme term' ++ ")"
+    App term1 term2 -> "(" ++ showTermScheme term1 ++ " " ++ showTermScheme term2 ++ ")"
+  where
+    replacePrime = map (\x -> if x == '\'' then '_' else x)

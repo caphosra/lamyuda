@@ -119,6 +119,12 @@ doEvaluate (_, _, _, _) (Exec ["enable", "eta"]) = do
 doEvaluate (_, _, _, _) (Exec ["disable", "eta"]) = do
     putStrLn "η-reduction feature disabled."
     return $ KeepAlive (Unmodified, Modified BetaOnly, Unmodified, Unmodified)
+doEvaluate (_, _, _, _) (Exec ["enable", "scheme"]) = do
+    putStrLn "Scheme-style feature enabled."
+    return $ KeepAlive (Unmodified, Unmodified, Unmodified, Modified showTermScheme)
+doEvaluate (_, _, _, _) (Exec ["disable", "scheme"]) = do
+    putStrLn "Scheme-style feature disabled."
+    return $ KeepAlive (Unmodified, Unmodified, Unmodified, Modified showTerm)
 doEvaluate config (Exec ["eval", source]) = do
     content <- readFile path
     newConfig <- evalOnce config $ splitOn "\n" content
