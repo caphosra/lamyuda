@@ -53,7 +53,7 @@ exp 2 2
 Normal form.
 ```
 
-### Specifies a evaluation strategy
+### Specifies an evaluation strategy
 
 This is why I decided to create this project. You can specify a evaluation strategy by `#strategy`.
 
