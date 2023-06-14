@@ -10,7 +10,7 @@ RUN \
     sudo chmod 1777 /tmp; \
     stack build --copy-bins;
 
-FROM ubuntu:20.04
+FROM ubuntu:20.04 AS ship
 
 RUN \
     apt update; \
